@@ -34,10 +34,16 @@ function App() {
       )
 
       setSecondsLeft(remaining)
+if (remaining === 0) {
+  clearInterval(interval)
+  setIsRunning(false)
+  endTime.current = null
 
-      if (remaining === 0) {
-        setIsRunning(false)
-        endTime.current = null
+  alert(
+    mode === 'pomodoro'
+      ? 'Focus session finished! Time for a break.'
+      : 'Break finished! Ready to focus again?',
+  )
 
         if (mode === 'pomodoro') {
           const nextCount = completed + 1
@@ -135,7 +141,7 @@ function App() {
       <main className="content">
         {showSettings && (
           <form className="settings-panel" onSubmit={saveSettings}>
-            <h2>Choose your time</h2>
+            <h4>Choose your time</h4>
 
             <div className="settings-fields">
               {Object.entries(labels).map(([key, label]) => (
