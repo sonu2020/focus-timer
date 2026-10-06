@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import TimelineView from './TimelineView'
+import { normalizeTimelineConfig } from './timelineConfig'
 
 const labels = {
   pomodoro: 'Pomodoro',
@@ -13,6 +15,18 @@ const defaultMinutes = {
   long: 15,
 }
 
+const TIMELINE_STORAGE_KEY = 'focus-timer.timeline-config'
+
+function readTimelineConfig() {
+  try {
+    return normalizeTimelineConfig(
+      JSON.parse(localStorage.getItem(TIMELINE_STORAGE_KEY)),
+    )
+  } catch {
+    return normalizeTimelineConfig(null)
+  }
+}
+
 function App() {
   const [durations, setDurations] = useState(defaultMinutes)
   const [draftDurations, setDraftDurations] = useState(defaultMinutes)
@@ -21,8 +35,21 @@ function App() {
   const [isRunning, setIsRunning] = useState(false)
   const [completed, setCompleted] = useState(0)
   const [showSettings, setShowSettings] = useState(false)
+  const [viewMode, setViewMode] = useState('timer')
+  const [timelineConfig, setTimelineConfig] = useState(readTimelineConfig)
 
   const endTime = useRef(null)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        TIMELINE_STORAGE_KEY,
+        JSON.stringify(timelineConfig),
+      )
+    } catch {
+      return
+    }
+  }, [timelineConfig])
 
   useEffect(() => {
     if (!isRunning) return
@@ -116,6 +143,10 @@ if (remaining === 0) {
     setShowSettings(false)
   }
 
+  function toggleViewMode() {
+    setViewMode((current) => (current === 'timer' ? 'timeline' : 'timer'))
+  }
+
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
   const seconds = String(secondsLeft % 60).padStart(2, '0')
 
@@ -125,20 +156,34 @@ if (remaining === 0) {
   const circumference = 2 * Math.PI * radius
 
   return (
-    <div className={`app ${mode}`}>
+    <div
+      className={`app ${mode}${viewMode === 'timeline' ? ' timeline-mode' : ''}`}
+    >
       <header className="header">
         <h1>Focus Timer</h1>
 
-        <button
-          className="settings-button"
-          onClick={() => setShowSettings((open) => !open)}
-          aria-expanded={showSettings}
-        >
-          ⚙ Settings
-        </button>
+        <div className="header-actions">
+          <button
+            className="settings-button mode-button"
+            onClick={toggleViewMode}
+            title="Switch between Timer and Timeline / Ambient views"
+          >
+            ⇄ Switch Mode
+          </button>
+
+          <button
+            className="settings-button"
+            onClick={() => setShowSettings((open) => !open)}
+            aria-expanded={showSettings}
+          >
+            ⚙ Settings
+          </button>
+        </div>
       </header>
 
-      <main className="content">
+      <main
+        className={`content${viewMode === 'timeline' ? ' content--timeline' : ''}`}
+      >
         {showSettings && (
           <form className="settings-panel" onSubmit={saveSettings}>
             <h4>Choose your time</h4>
@@ -169,67 +214,75 @@ if (remaining === 0) {
           </form>
         )}
 
-        <section className="timer-card">
-          <div className="tabs" aria-label="Timer mode">
-            {Object.entries(labels).map(([key, label]) => (
-              <button
-                key={key}
-                className={mode === key ? 'tab active' : 'tab'}
-                onClick={() => selectMode(key)}
-              >
-                {label}
-              </button>
-            ))}
+        {viewMode === 'timer' ? (
+          <div className="view" key="timer">
+            <section className="timer-card">
+              <div className="tabs" aria-label="Timer mode">
+                {Object.entries(labels).map(([key, label]) => (
+                  <button
+                    key={key}
+                    className={mode === key ? 'tab active' : 'tab'}
+                    onClick={() => selectMode(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="timer-circle">
+                <svg
+                  className="progress-ring"
+                  viewBox="0 0 240 240"
+                  aria-hidden="true"
+                >
+                  <circle
+                    className="ring-background"
+                    cx="120"
+                    cy="120"
+                    r={radius}
+                  />
+
+                  <circle
+                    className="ring-progress"
+                    cx="120"
+                    cy="120"
+                    r={radius}
+                    strokeDasharray={circumference}
+                    strokeDashoffset={circumference * (1 - progress)}
+                  />
+                </svg>
+
+                <div className="time" role="timer" aria-live="off">
+                  {minutes}:{seconds}
+                </div>
+              </div>
+
+              <div className="controls">
+                <button className="start-button" onClick={toggleTimer}>
+                  {isRunning ? 'PAUSE' : 'START'}
+                </button>
+
+                <button className="reset-button" onClick={resetTimer}>
+                  Reset
+                </button>
+              </div>
+            </section>
+
+            <p className="session-count">
+              Completed focus sessions: {completed}
+            </p>
+
+            <p className="message">
+              {mode === 'pomodoro'
+                ? 'Time to focus!'
+                : 'Take a break—you earned it.'}
+            </p>
           </div>
-
-          <div className="timer-circle">
-            <svg
-              className="progress-ring"
-              viewBox="0 0 240 240"
-              aria-hidden="true"
-            >
-              <circle
-                className="ring-background"
-                cx="120"
-                cy="120"
-                r={radius}
-              />
-
-              <circle
-                className="ring-progress"
-                cx="120"
-                cy="120"
-                r={radius}
-                strokeDasharray={circumference}
-                strokeDashoffset={circumference * (1 - progress)}
-              />
-            </svg>
-
-            <div className="time" role="timer" aria-live="off">
-              {minutes}:{seconds}
-            </div>
+        ) : (
+          <div className="view timeline-view" key="timeline">
+            <TimelineView config={timelineConfig} onChange={setTimelineConfig} />
           </div>
-
-          <div className="controls">
-            <button className="start-button" onClick={toggleTimer}>
-              {isRunning ? 'PAUSE' : 'START'}
-            </button>
-
-            <button className="reset-button" onClick={resetTimer}>
-              Reset
-            </button>
-          </div>
-        </section>
-
-        <p className="session-count">
-          Completed focus sessions: {completed}
-        </p>
-
-        <p className="message">
-          {mode === 'pomodoro'
-            ? 'Time to focus!'
-            : 'Take a break—you earned it.'}
-        </p>
+        )}
       </main>
     </div>
   )
