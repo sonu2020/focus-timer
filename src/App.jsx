@@ -36,7 +36,7 @@ function App() {
   const [isRunning, setIsRunning] = useState(false)
   const [completed, setCompleted] = useState(0)
   const [showSettings, setShowSettings] = useState(false)
-  const [viewMode, setViewMode] = useState('timer')
+  const [viewMode, setViewMode] = useState('timeline')
   const [timelineConfig, setTimelineConfig] = useState(readTimelineConfig)
   const [scrollLocked, setScrollLocked] = useState(true)
   const [aboutVisible, setAboutVisible] = useState(false)
@@ -178,10 +178,6 @@ function App() {
     setShowSettings(false)
   }
 
-  function toggleViewMode() {
-    setViewMode((current) => (current === 'timer' ? 'timeline' : 'timer'))
-  }
-
   function goToAbout(event) {
     event.preventDefault()
     setScrollLocked(false)
@@ -205,14 +201,6 @@ function App() {
 
           <div className="header-actions">
             <AmbienceMenu />
-
-            <button
-              className="settings-button mode-button"
-              onClick={toggleViewMode}
-              title="Switch between Timer and Timeline / Ambient views"
-            >
-              ⇄ Switch Mode
-            </button>
 
             <button
               className="settings-button"
