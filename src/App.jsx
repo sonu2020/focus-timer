@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import Header from './Header'
 import TimelineView from './TimelineView'
-import AmbienceMenu from './AmbienceMenu'
 import { normalizeTimelineConfig } from './timelineConfig'
 
 const labels = {
@@ -29,13 +29,10 @@ function readTimelineConfig() {
 }
 
 function App() {
-  const [durations, setDurations] = useState(defaultMinutes)
-  const [draftDurations, setDraftDurations] = useState(defaultMinutes)
   const [mode, setMode] = useState('pomodoro')
   const [secondsLeft, setSecondsLeft] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
   const [completed, setCompleted] = useState(0)
-  const [showSettings, setShowSettings] = useState(false)
   const [viewMode, setViewMode] = useState('timeline')
   const [timelineConfig, setTimelineConfig] = useState(readTimelineConfig)
   const [scrollLocked, setScrollLocked] = useState(true)
@@ -113,22 +110,22 @@ function App() {
 
           const nextMode = nextCount % 4 === 0 ? 'long' : 'short'
           setMode(nextMode)
-          setSecondsLeft(durations[nextMode] * 60)
+          setSecondsLeft(defaultMinutes[nextMode] * 60)
         } else {
           setMode('pomodoro')
-          setSecondsLeft(durations.pomodoro * 60)
+          setSecondsLeft(defaultMinutes.pomodoro * 60)
         }
       }
     }, 250)
 
     return () => clearInterval(interval)
-  }, [isRunning, mode, completed, durations])
+  }, [isRunning, mode, completed])
 
   function selectMode(nextMode) {
     setIsRunning(false)
     endTime.current = null
     setMode(nextMode)
-    setSecondsLeft(durations[nextMode] * 60)
+    setSecondsLeft(defaultMinutes[nextMode] * 60)
   }
 
   function toggleTimer() {
@@ -144,38 +141,15 @@ function App() {
   function resetTimer() {
     setIsRunning(false)
     endTime.current = null
-    setSecondsLeft(durations[mode] * 60)
+    setSecondsLeft(defaultMinutes[mode] * 60)
   }
 
-  function updateDraft(key, value) {
-    setDraftDurations((current) => ({
-      ...current,
-      [key]: value,
-    }))
-  }
-
-  function saveSettings(event) {
-    event.preventDefault()
-
-    const updated = {}
-
-    for (const key of Object.keys(labels)) {
-      const minutes = Number(draftDurations[key])
-
-      if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {
-        alert('Choose a whole number from 1 to 180 minutes.')
-        return
-      }
-
-      updated[key] = minutes
-    }
-
-    setIsRunning(false)
-    endTime.current = null
-    setDurations(updated)
-    setDraftDurations(updated)
-    setSecondsLeft(updated[mode] * 60)
-    setShowSettings(false)
+  function startSprint() {
+    setViewMode('timer')
+    setMode('pomodoro')
+    setSecondsLeft(defaultMinutes.pomodoro * 60)
+    endTime.current = Date.now() + defaultMinutes.pomodoro * 60 * 1000
+    setIsRunning(true)
   }
 
   function goToAbout(event) {
@@ -186,7 +160,7 @@ function App() {
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
   const seconds = String(secondsLeft % 60).padStart(2, '0')
 
-  const totalSeconds = durations[mode] * 60
+  const totalSeconds = defaultMinutes[mode] * 60
   const progress = secondsLeft / totalSeconds
   const radius = 110
   const circumference = 2 * Math.PI * radius
@@ -195,54 +169,12 @@ function App() {
     <div
       className={`app ${mode}${viewMode === 'timeline' ? ' timeline-mode' : ''}`}
     >
+      <Header onStart={startSprint} />
+
       <section className="landing">
-        <header className="header">
-          <h1>Focus Timer</h1>
-
-          <div className="header-actions">
-            <AmbienceMenu />
-
-            <button
-              className="settings-button"
-              onClick={() => setShowSettings((open) => !open)}
-              aria-expanded={showSettings}
-            >
-              ⚙ Settings
-            </button>
-          </div>
-        </header>
-
         <main
           className={`content${viewMode === 'timeline' ? ' content--timeline' : ''}`}
         >
-          {showSettings && (
-            <form className="settings-panel" onSubmit={saveSettings}>
-              <h4>Choose your time</h4>
-
-              <div className="settings-fields">
-                {Object.entries(labels).map(([key, label]) => (
-                  <label key={key}>
-                    <span>{label}</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="180"
-                      step="1"
-                      value={draftDurations[key]}
-                      onChange={(event) => updateDraft(key, event.target.value)}
-                      required
-                    />
-                    <small>minutes</small>
-                  </label>
-                ))}
-              </div>
-
-              <button className="save-button" type="submit">
-                Save times
-              </button>
-            </form>
-          )}
-
           {viewMode === 'timer' ? (
             <div className="view" key="timer">
               <section className="timer-card">
@@ -342,29 +274,18 @@ function App() {
           <article className="about-item">
             <h3>Timer &amp; timeline</h3>
             <p>
-              Use <strong>Settings</strong> to choose your own Pomodoro, short
-              break and long break lengths. <strong>Switch Mode</strong> flips
-              the same day between the classic countdown and a timeline view
-              that shows how much of your day is already spent.
-            </p>
-          </article>
-
-          <article className="about-item">
-            <h3>Ambience</h3>
-            <p>
-              The <strong>♫</strong> menu beside Switch Mode plays background
-              sound while you work: rain, ocean, forest, brown and pink noise,
-              plus a slow focus pad for deep work. Every sound is generated
-              live in your browser with the Web Audio API, so nothing is
-              downloaded and nothing leaves your device.
+              Hit <strong>Start a Sprint</strong> in the header to kick off a
+              Pomodoro focus session, then flow through short and long breaks
+              automatically. Switch between the classic countdown and a
+              timeline view that shows how much of your day is already spent.
             </p>
           </article>
 
           <article className="about-item">
             <h3>Storage</h3>
             <p>
-              Your timer lengths and timeline settings are saved locally in
-              this browser, and stay there until you change them.
+              Your timeline settings are saved locally in this browser, and
+              stay there until you change them.
             </p>
           </article>
         </div>
