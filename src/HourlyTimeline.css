@@ -105,10 +105,11 @@
 /* ===== Hourly block grid (Frame 7) ===== */
 
 .hourly-timeline__grid {
+  --block-gap: 32px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  gap: 32px;
+  gap: var(--block-gap);
   grid-column: 1 / -1;
   grid-row: 2;
   align-self: start;
@@ -119,8 +120,8 @@
 }
 
 .hourly-timeline__block {
-  flex: 1 1 0;
-  width: 89px;
+  flex: 0 0 auto;
+  width: calc((100% - 11 * var(--block-gap)) / 12);
   min-width: 0;
   height: 100%;
   border-radius: 8px;
@@ -195,7 +196,7 @@
   }
 
   .hourly-timeline__grid {
-    gap: 10px;
+    --block-gap: 10px;
     height: 360px;
   }
 

@@ -28,6 +28,7 @@ function formatLabel(hour24) {
 function HourlyTimeline({ config }) {
   const startHour = config?.startHour ?? 9
   const endHour = config?.endHour ?? 19
+  const blockCount = Math.max(1, config?.blockCount ?? 10)
   const theme = config?.theme ?? '#52d696'
 
   const [minutes, setMinutes] = useState(getMinutesNow)
@@ -91,22 +92,17 @@ function HourlyTimeline({ config }) {
   const nowPercent = inRange ? (elapsed / span) * 100 : 0
   const current = formatHour(Math.floor(minutes / 60) % 24)
 
-  function isBlockPast(index) {
-    const blockEnd = startMinutes + (index + 1) * 60
+  const blockSpan = span / blockCount
+  const shiftedNow = (minutes - startMinutes + DAY_MINUTES) % DAY_MINUTES
 
-    if (!wraps) {
-      return minutes >= blockEnd
-    }
+  const blocks = Array.from({ length: blockCount }, (_, index) => {
+    const blockEnd = (index + 1) * blockSpan
 
-    const shiftedNow = (minutes - startMinutes + DAY_MINUTES) % DAY_MINUTES
+    const past = wraps
+      ? shiftedNow < span && shiftedNow >= blockEnd
+      : minutes >= startMinutes + blockEnd
 
-    return shiftedNow < span && shiftedNow >= (index + 1) * 60
-  }
-
-  const blocks = Array.from({ length: totalHours }, (_, index) => {
-    const hour = (startHour + index) % 24
-
-    return { hour, past: isBlockPast(index) }
+    return { index, past }
   })
 
   const ticks = Array.from({ length: totalHours - 1 }, (_, index) => {
@@ -150,9 +146,9 @@ function HourlyTimeline({ config }) {
       </span>
 
       <div className="hourly-timeline__grid">
-        {blocks.map(({ hour, past }) => (
+        {blocks.map(({ index, past }) => (
           <div
-            key={hour}
+            key={index}
             className={`hourly-timeline__block${
               past ? ' hourly-timeline__block--past' : ''
             }`}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import Header from './Header'
+import HomePage from './HomePage'
 import HourlyTimeline from './HourlyTimeline'
 import SprintModal from './SprintModal'
 
@@ -19,7 +20,8 @@ const defaultMinutes = {
 const DEFAULT_SPRINT = {
   startHour: 9,
   endHour: 19,
-  length: 'Medium',
+  length: '10',
+  blockCount: 10,
   theme: '#52d696',
 }
 
@@ -28,10 +30,11 @@ function App() {
   const [secondsLeft, setSecondsLeft] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
   const [completed, setCompleted] = useState(0)
-  const [viewMode, setViewMode] = useState('timeline')
+  const [viewMode, setViewMode] = useState('home')
   const [scrollLocked, setScrollLocked] = useState(true)
   const [aboutVisible, setAboutVisible] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalMode, setModalMode] = useState('create')
   const [sprintConfig, setSprintConfig] = useState(DEFAULT_SPRINT)
 
   const endTime = useRef(null)
@@ -129,7 +132,8 @@ function App() {
     setSecondsLeft(defaultMinutes[mode] * 60)
   }
 
-  function openModal() {
+  function openModal(mode = 'create') {
+    setModalMode(mode)
     setIsModalOpen(true)
   }
 
@@ -160,9 +164,14 @@ function App() {
     <div
       className={`app ${mode}${viewMode === 'timeline' ? ' timeline-mode' : ''}`}
     >
-      <Header onStart={openModal} />
+      {viewMode !== 'home' && (
+        <Header onStart={() => openModal('update')} />
+      )}
 
-      <section className="landing">
+      {viewMode === 'home' ? (
+        <HomePage onStart={() => openModal('create')} />
+      ) : (
+        <section className="landing">
         <main
           className={`content${viewMode === 'timeline' ? ' content--timeline' : ''}`}
         >
@@ -246,9 +255,10 @@ function App() {
             </nav>
           </footer>
         )}
-      </section>
+        </section>
+      )}
 
-      {viewMode !== 'timeline' && (
+      {viewMode !== 'timeline' && viewMode !== 'home' && (
         <section className="about" id="about">
         <h2 className="about-title">About</h2>
 
@@ -282,6 +292,7 @@ function App() {
 
       <SprintModal
         open={isModalOpen}
+        mode={modalMode}
         onClose={closeModal}
         onStart={confirmSprint}
       />

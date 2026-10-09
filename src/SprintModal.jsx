@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import './SprintModal.css'
 
-const LENGTHS = ['Small', 'Medium', 'Large', 'Customize']
+const BLOCK_PRESETS = [3, 5, 10]
+
+const CUSTOM_BLOCK_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1)
 
 const THEMES = [
   { name: 'Green', value: '#52d696' },
@@ -41,11 +43,15 @@ function Caret() {
   )
 }
 
-function SprintModal({ open, onClose, onStart }) {
+function SprintModal({ open, mode = 'create', onClose, onStart }) {
+  const isUpdate = mode === 'update'
   const [startHour, setStartHour] = useState(9)
   const [endHour, setEndHour] = useState(19)
-  const [length, setLength] = useState('Medium')
+  const [length, setLength] = useState('10')
+  const [customBlocks, setCustomBlocks] = useState(6)
   const [theme, setTheme] = useState('Green')
+
+  const blockCount = length === 'Customize' ? customBlocks : Number(length)
 
   useEffect(() => {
     if (!open) return
@@ -65,6 +71,7 @@ function SprintModal({ open, onClose, onStart }) {
       startHour,
       endHour,
       length,
+      blockCount,
       themeName: theme,
       theme: selected ? selected.value : '#52d696',
     })
@@ -99,7 +106,7 @@ function SprintModal({ open, onClose, onStart }) {
         </button>
 
         <h2 id="sprint-modal-title" className="sprint-modal__title">
-          Create a Sprint
+          {isUpdate ? 'Update the sprint' : 'Create a Sprint'}
         </h2>
 
         <div className="sprint-modal__field">
@@ -141,19 +148,40 @@ function SprintModal({ open, onClose, onStart }) {
         <div className="sprint-modal__field">
           <span className="sprint-modal__label">How long is the sprint?</span>
           <div className="sprint-modal__segments" role="group">
-            {LENGTHS.map((option) => (
+            {BLOCK_PRESETS.map((option) => (
               <button
                 key={option}
                 type="button"
                 className={`sprint-modal__segment${
-                  length === option ? ' sprint-modal__segment--active' : ''
+                  length === String(option) ? ' sprint-modal__segment--active' : ''
                 }`}
-                onClick={() => setLength(option)}
+                onClick={() => setLength(String(option))}
               >
                 {option}
-                {option === 'Customize' && <Caret />}
               </button>
             ))}
+
+            <select
+              className={`sprint-modal__segment sprint-modal__segment--select${
+                length === 'Customize' ? ' sprint-modal__segment--active' : ''
+              }`}
+              value={length === 'Customize' ? String(customBlocks) : ''}
+              onChange={(event) => {
+                setLength('Customize')
+                setCustomBlocks(Number(event.target.value))
+              }}
+              aria-label="Custom block count"
+            >
+              <option value="" disabled>
+                Customize
+              </option>
+
+              {CUSTOM_BLOCK_OPTIONS.map((count) => (
+                <option key={count} value={count}>
+                  {count}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -182,7 +210,7 @@ function SprintModal({ open, onClose, onStart }) {
           className="sprint-modal__submit"
           onClick={handleStart}
         >
-          Start Now
+          {isUpdate ? 'Save changes' : 'Start Now'}
           <Caret />
         </button>
       </div>

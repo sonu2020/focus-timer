@@ -17,7 +17,7 @@ function Header({ onStart }) {
         </div>
 
         <button type="button" className="app-header__start" onClick={onStart}>
-          Start a Sprint
+          Update Sprint
         </button>
       </div>
     </header>
