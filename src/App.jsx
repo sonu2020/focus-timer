@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import Header from './Header'
-import TimelineView from './TimelineView'
-import { normalizeTimelineConfig } from './timelineConfig'
+import HourlyTimeline from './HourlyTimeline'
+import SprintModal from './SprintModal'
 
 const labels = {
   pomodoro: 'Pomodoro',
@@ -16,16 +16,11 @@ const defaultMinutes = {
   long: 15,
 }
 
-const TIMELINE_STORAGE_KEY = 'focus-timer.timeline-config'
-
-function readTimelineConfig() {
-  try {
-    return normalizeTimelineConfig(
-      JSON.parse(localStorage.getItem(TIMELINE_STORAGE_KEY)),
-    )
-  } catch {
-    return normalizeTimelineConfig(null)
-  }
+const DEFAULT_SPRINT = {
+  startHour: 9,
+  endHour: 19,
+  length: 'Medium',
+  theme: '#52d696',
 }
 
 function App() {
@@ -34,9 +29,10 @@ function App() {
   const [isRunning, setIsRunning] = useState(false)
   const [completed, setCompleted] = useState(0)
   const [viewMode, setViewMode] = useState('timeline')
-  const [timelineConfig, setTimelineConfig] = useState(readTimelineConfig)
   const [scrollLocked, setScrollLocked] = useState(true)
   const [aboutVisible, setAboutVisible] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [sprintConfig, setSprintConfig] = useState(DEFAULT_SPRINT)
 
   const endTime = useRef(null)
 
@@ -71,17 +67,6 @@ function App() {
     observer.observe(about)
     return () => observer.disconnect()
   }, [])
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        TIMELINE_STORAGE_KEY,
-        JSON.stringify(timelineConfig),
-      )
-    } catch {
-      return
-    }
-  }, [timelineConfig])
 
   useEffect(() => {
     if (!isRunning) return
@@ -144,12 +129,18 @@ function App() {
     setSecondsLeft(defaultMinutes[mode] * 60)
   }
 
-  function startSprint() {
-    setViewMode('timer')
-    setMode('pomodoro')
-    setSecondsLeft(defaultMinutes.pomodoro * 60)
-    endTime.current = Date.now() + defaultMinutes.pomodoro * 60 * 1000
-    setIsRunning(true)
+  function openModal() {
+    setIsModalOpen(true)
+  }
+
+  function closeModal() {
+    setIsModalOpen(false)
+  }
+
+  function confirmSprint(form) {
+    setSprintConfig(form)
+    setIsModalOpen(false)
+    setViewMode('timeline')
   }
 
   function goToAbout(event) {
@@ -169,7 +160,7 @@ function App() {
     <div
       className={`app ${mode}${viewMode === 'timeline' ? ' timeline-mode' : ''}`}
     >
-      <Header onStart={startSprint} />
+      <Header onStart={openModal} />
 
       <section className="landing">
         <main
@@ -241,10 +232,7 @@ function App() {
             </div>
           ) : (
             <div className="view timeline-view" key="timeline">
-              <TimelineView
-                config={timelineConfig}
-                onChange={setTimelineConfig}
-              />
+              <HourlyTimeline config={sprintConfig} />
             </div>
           )}
         </main>
@@ -291,6 +279,12 @@ function App() {
         </div>
         </section>
       )}
+
+      <SprintModal
+        open={isModalOpen}
+        onClose={closeModal}
+        onStart={confirmSprint}
+      />
     </div>
   )
 }
