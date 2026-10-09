@@ -311,8 +311,8 @@ button:active {
 }
 
 .content--timeline {
-  width: min(100%, 120ch);
-  max-width: 120ch;
+  width: 100%;
+  max-width: 1183px;
   margin-top: 40px;
   text-align: left;
 }
