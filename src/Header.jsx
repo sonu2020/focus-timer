@@ -1,4 +1,5 @@
 import './Header.css'
+import AmbienceMenu from './AmbienceMenu'
 
 function Header({ onStart }) {
   const today = new Date()
@@ -16,9 +17,13 @@ function Header({ onStart }) {
           <span className="app-header__month">{monthYear}</span>
         </div>
 
-        <button type="button" className="app-header__start" onClick={onStart}>
-          Update Sprint
-        </button>
+        <div className="app-header__actions">
+          <button type="button" className="app-header__start" onClick={onStart}>
+            Start a Sprint
+          </button>
+
+          <AmbienceMenu />
+        </div>
       </div>
     </header>
   )
