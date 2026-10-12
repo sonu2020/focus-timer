@@ -41,10 +41,17 @@
   color: #000000;
 }
 
+/* Start a Sprint + music button, joined with no gap */
+.app-header__actions {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+}
+
 .app-header__start {
   padding: 10px 20px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 8px 0 0 8px;
   background-color: #000000;
   color: #ffffff;
   font-weight: 500;
@@ -54,4 +61,37 @@
 .app-header__start:hover {
   opacity: 0.9;
   transform: none;
+}
+
+.app-header__actions .music-menu {
+  position: relative;
+  display: flex;
+}
+
+.app-header__actions .music-button {
+  padding: 0 16px;
+  border: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 0 8px 8px 0;
+  background: #000000;
+  color: #ffffff;
+  font-size: 17px;
+  line-height: 1;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.app-header__actions .music-button:hover {
+  background: #222222;
+  transform: none;
+}
+
+.app-header__actions .music-button.is-active {
+  background: #333333;
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 0 16px;
+  }
 }
