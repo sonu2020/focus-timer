@@ -6,14 +6,14 @@ const BLOCK_PRESETS = [3, 5, 10]
 const CUSTOM_BLOCK_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1)
 
 const THEMES = [
-  { name: 'Green', value: '#52d696' },
-  { name: 'Orange', value: '#f59e0b' },
-  { name: 'Red', value: '#ef4444' },
-  { name: 'Purple', value: '#8b5cf6' },
-  { name: 'Dark Gray', value: '#374151' },
-  { name: 'Blue', value: '#3b82f6' },
-  { name: 'Yellow', value: '#facc15' },
-  { name: 'Pink', value: '#ec4899' },
+  { name: 'Green', value: '#52d696', border: '#2E7D56' },
+  { name: 'Orange', value: '#f59e0b', border: '#C76A13' },
+  { name: 'Red', value: '#ef4444', border: '#C0392B' },
+  { name: 'Purple', value: '#8b5cf6', border: '#6C5CE7' },
+  { name: 'Dark Gray', value: '#374151', border: '#2C3A47' },
+  { name: 'Blue', value: '#3b82f6', border: '#1d4ed8' },
+  { name: 'Yellow', value: '#facc15', border: '#b45309' },
+  { name: 'Pink', value: '#ec4899', border: '#be185d' },
 ]
 
 function formatHour(hour24) {
@@ -47,6 +47,8 @@ function SprintModal({ open, mode = 'create', onClose, onStart }) {
   const isUpdate = mode === 'update'
   const [startHour, setStartHour] = useState(9)
   const [endHour, setEndHour] = useState(19)
+  const [startTouched, setStartTouched] = useState(false)
+  const [endTouched, setEndTouched] = useState(false)
   const [length, setLength] = useState('10')
   const [customBlocks, setCustomBlocks] = useState(6)
   const [theme, setTheme] = useState('Green')
@@ -106,7 +108,7 @@ function SprintModal({ open, mode = 'create', onClose, onStart }) {
         </button>
 
         <h2 id="sprint-modal-title" className="sprint-modal__title">
-          {isUpdate ? 'Update the sprint' : 'Create a Sprint'}
+          {isUpdate ? 'Update your sprint' : 'Create a Sprint'}
         </h2>
 
         <div className="sprint-modal__field">
@@ -115,9 +117,14 @@ function SprintModal({ open, mode = 'create', onClose, onStart }) {
           </label>
           <select
             id="sprint-start"
-            className="sprint-modal__select"
+            className={`sprint-modal__select${
+              startTouched ? ' sprint-modal__select--selected' : ''
+            }`}
             value={startHour}
-            onChange={(event) => setStartHour(Number(event.target.value))}
+            onChange={(event) => {
+              setStartTouched(true)
+              setStartHour(Number(event.target.value))
+            }}
           >
             {TIME_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -133,9 +140,14 @@ function SprintModal({ open, mode = 'create', onClose, onStart }) {
           </label>
           <select
             id="sprint-end"
-            className="sprint-modal__select"
+            className={`sprint-modal__select${
+              endTouched ? ' sprint-modal__select--selected' : ''
+            }`}
             value={endHour}
-            onChange={(event) => setEndHour(Number(event.target.value))}
+            onChange={(event) => {
+              setEndTouched(true)
+              setEndHour(Number(event.target.value))
+            }}
           >
             {TIME_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -152,9 +164,8 @@ function SprintModal({ open, mode = 'create', onClose, onStart }) {
               <button
                 key={option}
                 type="button"
-                className={`sprint-modal__segment${
-                  length === String(option) ? ' sprint-modal__segment--active' : ''
-                }`}
+                className={`sprint-modal__segment${length === String(option) ? ' sprint-modal__segment--active' : ''
+                  }`}
                 onClick={() => setLength(String(option))}
               >
                 {option}
@@ -162,9 +173,8 @@ function SprintModal({ open, mode = 'create', onClose, onStart }) {
             ))}
 
             <select
-              className={`sprint-modal__segment sprint-modal__segment--select${
-                length === 'Customize' ? ' sprint-modal__segment--active' : ''
-              }`}
+              className={`sprint-modal__segment sprint-modal__segment--select${length === 'Customize' ? ' sprint-modal__segment--active' : ''
+                }`}
               value={length === 'Customize' ? String(customBlocks) : ''}
               onChange={(event) => {
                 setLength('Customize')
@@ -192,10 +202,9 @@ function SprintModal({ open, mode = 'create', onClose, onStart }) {
               <button
                 key={item.name}
                 type="button"
-                className={`sprint-modal__swatch${
-                  theme === item.name ? ' sprint-modal__swatch--active' : ''
-                }`}
-                style={{ '--swatch': item.value }}
+                className={`sprint-modal__swatch${theme === item.name ? ' sprint-modal__swatch--active' : ''
+                  }`}
+                style={{ '--swatch': item.value, '--swatch-border': item.border }}
                 onClick={() => setTheme(item.name)}
                 aria-label={item.name}
                 aria-pressed={theme === item.name}
@@ -210,7 +219,7 @@ function SprintModal({ open, mode = 'create', onClose, onStart }) {
           className="sprint-modal__submit"
           onClick={handleStart}
         >
-          {isUpdate ? 'Save changes' : 'Start Now'}
+          {isUpdate ? 'Save Changes' : 'Start Now'}
           <Caret />
         </button>
       </div>
