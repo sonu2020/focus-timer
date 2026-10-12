@@ -1,0 +1,132 @@
+/* ===== Ambience / music menu: black and white theme ===== */
+
+.music-menu {
+  position: relative;
+}
+
+.music-menu .music-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  width: 264px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid #000000;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  animation: music-panel-in 0.18s ease both;
+}
+
+@keyframes music-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-menu .music-panel {
+    animation: none;
+  }
+}
+
+.music-menu .music-panel-title {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #000000;
+}
+
+.music-menu .music-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.music-menu .music-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 14px;
+  border: 1px solid #000000;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  text-align: left;
+  box-shadow: none;
+}
+
+.music-menu .music-option:hover {
+  background: #f0f0f0;
+  transform: none;
+}
+
+.music-menu .music-option:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+.music-menu .music-option span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-menu .music-option small {
+  flex: none;
+  font-size: 11px;
+  font-weight: normal;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.music-menu .music-option.active {
+  background: #000000;
+  border-color: #000000;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.music-menu .music-option.active:hover {
+  background: #222222;
+}
+
+.music-menu .music-volume {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid #000000;
+}
+
+.music-menu .music-volume label {
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #000000;
+}
+
+.music-menu .music-volume input {
+  flex: 1;
+  min-width: 0;
+  accent-color: #000000;
+}
