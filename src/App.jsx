@@ -25,17 +25,45 @@ const DEFAULT_SPRINT = {
   theme: '#52d696',
 }
 
+// NEW: where the visitor's chosen times are saved in their browser
+const SPRINT_STORAGE_KEY = 'focus-timer.sprint-config'
+
+// NEW: returns the saved sprint settings, or null for a first-time visitor
+function readSavedSprint() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SPRINT_STORAGE_KEY))
+
+    if (
+      !saved ||
+      !Number.isInteger(saved.startHour) ||
+      !Number.isInteger(saved.endHour)
+    ) {
+      return null
+    }
+
+    return { ...DEFAULT_SPRINT, ...saved }
+  } catch {
+    return null
+  }
+}
+
 function App() {
   const [mode, setMode] = useState('pomodoro')
   const [secondsLeft, setSecondsLeft] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
   const [completed, setCompleted] = useState(0)
-  const [viewMode, setViewMode] = useState('home')
+  // CHANGED: first-time visitors see the home page, returning ones the timeline
+  const [viewMode, setViewMode] = useState(() =>
+    readSavedSprint() ? 'timeline' : 'home',
+  )
   const [scrollLocked, setScrollLocked] = useState(true)
   const [aboutVisible, setAboutVisible] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState('create')
-  const [sprintConfig, setSprintConfig] = useState(DEFAULT_SPRINT)
+  // CHANGED: start from the saved settings when there are any
+  const [sprintConfig, setSprintConfig] = useState(
+    () => readSavedSprint() ?? DEFAULT_SPRINT,
+  )
 
   const endTime = useRef(null)
 
@@ -132,8 +160,9 @@ function App() {
     setSecondsLeft(defaultMinutes[mode] * 60)
   }
 
-  function openModal(mode = 'create') {
-    setModalMode(mode)
+  // CHANGED: parameter renamed so it doesn't shadow the `mode` state above
+  function openModal(nextModalMode = 'create') {
+    setModalMode(nextModalMode)
     setIsModalOpen(true)
   }
 
@@ -141,8 +170,16 @@ function App() {
     setIsModalOpen(false)
   }
 
+  // CHANGED: also saves the chosen settings in the browser
   function confirmSprint(form) {
     setSprintConfig(form)
+
+    try {
+      localStorage.setItem(SPRINT_STORAGE_KEY, JSON.stringify(form))
+    } catch {
+      // storage unavailable, the settings just won't be remembered
+    }
+
     setIsModalOpen(false)
     setViewMode('timeline')
   }
@@ -293,6 +330,7 @@ function App() {
       <SprintModal
         open={isModalOpen}
         mode={modalMode}
+        initial={sprintConfig}
         onClose={closeModal}
         onStart={confirmSprint}
       />

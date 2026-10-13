@@ -6,12 +6,48 @@ export const AMBIENCE_TRACKS = [
   { id: "brown", label: "Brown noise", hint: "deep rumble" },
   { id: "pink", label: "Pink noise", hint: "soft static" },
   { id: "focus", label: "Focus pad", hint: "calm chords" },
+  // remove if unwanted
+  {
+    id: "drone",
+    label: "Meditation drone",
+    hint: "deep drone",
+    file: "/audio/rooted-meditation-drone-cccaefcf.mp3",
+    fallback: "focus",
+  },
+  // remove if unwanted
+  {
+    id: "techno",
+    label: "Ambient techno",
+    hint: "soft pulse",
+    file: "/audio/pulsing-ambient-techno-dfd07da3.mp3",
+    fallback: "focus",
+  },
 ];
 
 let ctx = null;
 let master = null;
 let current = null;
+let currentId = "off";
 let volume = 0.6;
+const listeners = new Set();
+
+export function getAmbienceId() {
+  return currentId;
+}
+
+export function subscribeAmbience(listener) {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function setCurrentId(id) {
+  if (currentId === id) return;
+  currentId = id;
+  listeners.forEach((listener) => listener());
+}
 
 function getContext() {
   if (!ctx) {
@@ -104,6 +140,14 @@ function stopAll(nodes) {
     });
   };
 }
+
+function combine(...stops) {
+  return () => {
+    stops.forEach((stop) => stop());
+  };
+}
+
+/* ===== Nature and noise sounds ===== */
 
 function rain(audio, out) {
   const source = noiseSource(audio, "pink");
@@ -208,7 +252,218 @@ function focus(audio, out) {
   return stopAll(nodes);
 }
 
-const BUILDERS = { rain, waves, forest, brown, pink, focus };
+/* ===== Cafe building blocks (generated fallback sounds) ===== */
+
+function murmur(audio, out, level, muffled = false) {
+  const layers = [
+    { freq: 420, q: 0.9, rate: 0.31 },
+    { freq: 800, q: 1.1, rate: 0.47 },
+    { freq: 1300, q: 1.3, rate: 0.23 },
+    { freq: 2000, q: 1.2, rate: 0.61 },
+  ];
+  const nodes = [];
+
+  layers.forEach(({ freq, q, rate }) => {
+    const source = noiseSource(audio, "pink");
+    const band = filter(audio, "bandpass", muffled ? freq * 0.6 : freq, q);
+    const base = level * 0.9;
+    const gain = gainNode(audio, base);
+    source.connect(band);
+    band.connect(gain);
+    gain.connect(out);
+    source.start();
+    nodes.push(source, lfo(audio, rate, base * 0.8, gain.gain));
+  });
+
+  return stopAll(nodes);
+}
+
+function clinks(audio, out, minMs, maxMs, peak) {
+  const partials = [1, 2.76];
+  let timer = null;
+
+  function clink() {
+    const start = audio.currentTime;
+    const base = 2400 + Math.random() * 1800;
+
+    partials.forEach((ratio, index) => {
+      const osc = audio.createOscillator();
+      const env = gainNode(audio, 0);
+      osc.type = "sine";
+      osc.frequency.value = base * ratio;
+      env.gain.setValueAtTime(0, start);
+      env.gain.linearRampToValueAtTime(peak / (index + 1), start + 0.005);
+      env.gain.exponentialRampToValueAtTime(0.0001, start + 0.35);
+      osc.connect(env);
+      env.connect(out);
+      osc.start(start);
+      osc.stop(start + 0.4);
+    });
+
+    timer = setTimeout(clink, minMs + Math.random() * (maxMs - minMs));
+  }
+
+  timer = setTimeout(clink, 1200);
+  return () => clearTimeout(timer);
+}
+
+function steam(audio, out, minMs, maxMs) {
+  let timer = null;
+
+  function burst() {
+    const start = audio.currentTime;
+    const length = 1.8 + Math.random() * 1.4;
+    const source = noiseSource(audio, "pink");
+    const high = filter(audio, "highpass", 3500);
+    const env = gainNode(audio, 0);
+
+    env.gain.setValueAtTime(0, start);
+    env.gain.linearRampToValueAtTime(0.35, start + 0.25);
+    env.gain.setValueAtTime(0.35, start + length - 0.6);
+    env.gain.linearRampToValueAtTime(0, start + length);
+
+    source.connect(high);
+    high.connect(env);
+    env.connect(out);
+    source.start(start);
+    source.stop(start + length + 0.1);
+
+    timer = setTimeout(burst, minMs + Math.random() * (maxMs - minMs));
+  }
+
+  timer = setTimeout(burst, 2500);
+  return () => clearTimeout(timer);
+}
+
+const JAZZ_CHORDS = [
+  [146.83, 174.61, 220.0, 261.63], // Dm7
+  [98.0, 174.61, 246.94, 293.66], // G7
+  [130.81, 164.81, 196.0, 246.94], // Cmaj7
+  [110.0, 164.81, 196.0, 261.63], // Am7
+];
+
+function jazz(audio, out) {
+  const low = filter(audio, "lowpass", 1200);
+  low.connect(out);
+
+  let index = 0;
+  let timer = null;
+
+  function playChord() {
+    const start = audio.currentTime;
+
+    JAZZ_CHORDS[index % JAZZ_CHORDS.length].forEach((frequency) => {
+      const osc = audio.createOscillator();
+      const env = gainNode(audio, 0);
+      osc.type = "triangle";
+      osc.frequency.value = frequency;
+      env.gain.setValueAtTime(0, start);
+      env.gain.linearRampToValueAtTime(0.05, start + 0.4);
+      env.gain.linearRampToValueAtTime(0, start + 3.8);
+      osc.connect(env);
+      env.connect(low);
+      osc.start(start);
+      osc.stop(start + 4);
+    });
+
+    index += 1;
+    timer = setTimeout(playChord, 3600);
+  }
+
+  playChord();
+  return () => clearTimeout(timer);
+}
+
+function cafeBusy(audio, out) {
+  return combine(murmur(audio, out, 1.2), clinks(audio, out, 2500, 7000, 0.08));
+}
+
+function cafeQuiet(audio, out) {
+  return combine(
+    murmur(audio, out, 0.55, true),
+    clinks(audio, out, 9000, 20000, 0.05),
+  );
+}
+
+function cafeEspresso(audio, out) {
+  return combine(
+    murmur(audio, out, 0.9),
+    steam(audio, out, 9000, 18000),
+    clinks(audio, out, 4000, 9000, 0.07),
+  );
+}
+
+function cafeRainy(audio, out) {
+  const rainOut = gainNode(audio, 0.45);
+  rainOut.connect(out);
+
+  return combine(
+    rain(audio, rainOut),
+    murmur(audio, out, 0.5, true),
+    clinks(audio, out, 9000, 18000, 0.04),
+  );
+}
+
+function cafeJazz(audio, out) {
+  return combine(
+    murmur(audio, out, 0.45, true),
+    jazz(audio, out),
+    clinks(audio, out, 8000, 16000, 0.04),
+  );
+}
+
+const BUILDERS = {
+  rain,
+  waves,
+  forest,
+  brown,
+  pink,
+  focus,
+  "cafe-busy": cafeBusy,
+  "cafe-quiet": cafeQuiet,
+  "cafe-espresso": cafeEspresso,
+  "cafe-rainy": cafeRainy,
+  "cafe-jazz": cafeJazz,
+};
+
+/* ===== Real audio files ===== */
+
+// Plays a file from public/ in a loop. If the file is missing or can't be
+// played, it falls back to the generated sound with the given id.
+function fileTrack(url, fallbackId) {
+  return (audio, out) => {
+    const element = new Audio(url);
+    element.loop = true;
+    element.preload = "auto";
+
+    const source = audio.createMediaElementSource(element);
+    source.connect(out);
+
+    let stopFallback = null;
+    let stopped = false;
+
+    function useFallback() {
+      const build = BUILDERS[fallbackId];
+      if (stopped || stopFallback || !build) return;
+      stopFallback = build(audio, out);
+    }
+
+    element.addEventListener("error", useFallback);
+    element.play().catch(() => {});
+
+    return () => {
+      stopped = true;
+      element.removeEventListener("error", useFallback);
+      element.pause();
+      element.removeAttribute("src");
+      element.load();
+      source.disconnect();
+      if (stopFallback) stopFallback();
+    };
+  };
+}
+
+/* ===== Playback ===== */
 
 function stopCurrent() {
   if (!current) return;
@@ -224,13 +479,26 @@ function stopCurrent() {
   }, 450);
 }
 
-export function playAmbience(id) {
+export function playAmbience(id, options = {}) {
+  if (id !== "off" && id === currentId) return;
+
   stopCurrent();
-  if (id === "off") return;
+
+  if (id === "off") {
+    setCurrentId("off");
+    return;
+  }
 
   const audio = getContext();
-  const build = BUILDERS[id];
-  if (!audio || !build) return;
+  const track = AMBIENCE_TRACKS.find((item) => item.id === id);
+  const file = options.file ?? track?.file;
+  const fallback = options.fallback ?? track?.fallback ?? id;
+  const build = file ? fileTrack(file, fallback) : BUILDERS[fallback];
+
+  if (!audio || !build) {
+    setCurrentId("off");
+    return;
+  }
 
   const out = audio.createGain();
   out.gain.setValueAtTime(0, audio.currentTime);
@@ -238,6 +506,7 @@ export function playAmbience(id) {
   out.connect(master);
 
   current = { out, cleanup: build(audio, out) };
+  setCurrentId(id);
 }
 
 export function setAmbienceVolume(value) {
