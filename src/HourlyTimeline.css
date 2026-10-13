@@ -110,6 +110,11 @@
   cursor: pointer;
 }
 
+.hourly-timeline__now:hover,
+.hourly-timeline__now:active {
+  transform: translate(-50%, -50%);
+}
+
 .hourly-timeline__now:hover .hourly-timeline__now-plus {
   transform: translateX(-50%) scale(1.2);
 }
