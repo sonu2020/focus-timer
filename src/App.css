@@ -113,6 +113,7 @@ button:active {
 .content {
   flex: 1 1 auto;
   min-height: 0;
+  overflow-x: clip;
   overflow-y: auto;
   width: min(100%, 520px);
   max-width: 520px;
@@ -316,6 +317,7 @@ button:active {
   max-width: 1183px;
   margin-top: 40px;
   text-align: left;
+  overflow: visible;
 }
 
 .timeline-view {
