@@ -74,7 +74,7 @@
 }
 
 .sprint-modal__select {
-  width: 180px;
+  width: 150px;
   max-width: 200px;
   height: 38px;
   box-sizing: border-box;
@@ -100,6 +100,11 @@
 .sprint-modal__select:focus {
   border-color: #111111;
   outline: none;
+}
+
+.sprint-modal__select--selected {
+  border-color: #000000;
+  color: #000000;
 }
 
 .sprint-modal__segments {
@@ -178,7 +183,7 @@
   height: 24px;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--swatch, #cccccc);
 }
 
@@ -187,8 +192,7 @@
 }
 
 .sprint-modal__swatch--active {
-  outline: 2px solid #111111;
-  outline-offset: 2px;
+  border: 2px solid var(--swatch-border, #111111);
 }
 
 .sprint-modal__submit {
@@ -198,9 +202,9 @@
   gap: 6px;
   align-self: flex-start;
   width: auto;
-  padding: 10px 24px;
+  padding: 12px 24px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 5px;
   background: #000000;
   color: #ffffff;
   font-size: 15px;
