@@ -19,7 +19,7 @@ function Header({ onStart }) {
 
         <div className="app-header__actions">
           <button type="button" className="app-header__start" onClick={onStart}>
-            Start a Sprint
+            Update Sprint
           </button>
 
           <AmbienceMenu />
