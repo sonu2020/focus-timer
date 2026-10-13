@@ -16,17 +16,17 @@ const THEMES = [
   { name: 'Pink', value: '#ec4899', border: '#be185d' },
 ]
 
-function formatHour(hour24) {
-  const suffix = hour24 < 12 ? 'AM' : 'PM'
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
-
-  return `${String(hour12).padStart(2, '0')}:00 ${suffix}`
+// 9 -> "09:00" (the format a time input uses)
+function toTimeValue(hour24) {
+  return `${String(hour24).padStart(2, '0')}:00`
 }
 
-const TIME_OPTIONS = Array.from({ length: 24 }, (_, hour) => ({
-  value: hour,
-  label: formatHour(hour),
-}))
+// "09:30" -> 9 (the timeline works in whole hours)
+function hourFromTime(value) {
+  const hour = Number.parseInt(String(value).split(':')[0], 10)
+
+  return Number.isNaN(hour) ? null : hour
+}
 
 function Caret() {
   return (
@@ -43,15 +43,15 @@ function Caret() {
   )
 }
 
-function SprintModal({ open, mode = 'create', onClose, onStart }) {
+function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
   const isUpdate = mode === 'update'
-  const [startHour, setStartHour] = useState(9)
-  const [endHour, setEndHour] = useState(19)
-  const [startTouched, setStartTouched] = useState(false)
-  const [endTouched, setEndTouched] = useState(false)
-  const [length, setLength] = useState('10')
-  const [customBlocks, setCustomBlocks] = useState(6)
-  const [theme, setTheme] = useState('Green')
+  const [startHour, setStartHour] = useState(initial?.startHour ?? 9)
+  const [endHour, setEndHour] = useState(initial?.endHour ?? 19)
+  const [length, setLength] = useState(initial?.length ?? '10')
+  const [customBlocks, setCustomBlocks] = useState(
+    initial?.length === 'Customize' ? (initial.blockCount ?? 6) : 6,
+  )
+  const [theme, setTheme] = useState(initial?.themeName ?? 'Green')
 
   const blockCount = length === 'Customize' ? customBlocks : Number(length)
 
@@ -65,6 +65,16 @@ function SprintModal({ open, mode = 'create', onClose, onStart }) {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open, onClose])
+
+  function changeStart(event) {
+    const hour = hourFromTime(event.target.value)
+    if (hour !== null) setStartHour(hour)
+  }
+
+  function changeEnd(event) {
+    const hour = hourFromTime(event.target.value)
+    if (hour !== null) setEndHour(hour)
+  }
 
   function handleStart() {
     const selected = THEMES.find((item) => item.name === theme)
@@ -115,47 +125,35 @@ function SprintModal({ open, mode = 'create', onClose, onStart }) {
           <label className="sprint-modal__label" htmlFor="sprint-start">
             When does your day start?
           </label>
-          <select
+          <input
             id="sprint-start"
-            className={`sprint-modal__select${
-              startTouched ? ' sprint-modal__select--selected' : ''
-            }`}
-            value={startHour}
-            onChange={(event) => {
-              setStartTouched(true)
-              setStartHour(Number(event.target.value))
-            }}
-          >
-            {TIME_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            className="sprint-modal__time"
+            type="time"
+            step="3600"
+            value={toTimeValue(startHour)}
+            onChange={changeStart}
+            required
+          />
         </div>
 
         <div className="sprint-modal__field">
           <label className="sprint-modal__label" htmlFor="sprint-end">
             When does your day end?
           </label>
-          <select
+          <input
             id="sprint-end"
-            className={`sprint-modal__select${
-              endTouched ? ' sprint-modal__select--selected' : ''
-            }`}
-            value={endHour}
-            onChange={(event) => {
-              setEndTouched(true)
-              setEndHour(Number(event.target.value))
-            }}
-          >
-            {TIME_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            className="sprint-modal__time"
+            type="time"
+            step="3600"
+            value={toTimeValue(endHour)}
+            onChange={changeEnd}
+            required
+          />
         </div>
+
+        <p className="sprint-modal__hint">
+          Click the clock icon or type a time. It is set to the whole hour.
+        </p>
 
         <div className="sprint-modal__field">
           <span className="sprint-modal__label">How long is the sprint?</span>

@@ -1,5 +1,5 @@
 import './Header.css'
-import AmbienceMenu from './AmbienceMenu'
+// import AmbienceMenu from './AmbienceMenu'
 
 function Header({ onStart }) {
   const today = new Date()
@@ -22,7 +22,7 @@ function Header({ onStart }) {
             Start a Sprint
           </button>
 
-          <AmbienceMenu />
+          {/* <AmbienceMenu /> */}
         </div>
       </div>
     </header>

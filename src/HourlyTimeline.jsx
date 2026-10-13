@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import './HourlyTimeline.css'
+import CafePicker from './CafePicker'
 
 const DAY_MINUTES = 1440
 
@@ -158,34 +159,7 @@ function HourlyTimeline({ config }) {
       </div>
 
       <div className="hourly-timeline__status">
-        <button type="button" className="hourly-timeline__pill">
-          <svg
-            className="hourly-timeline__pill-play"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path d="M8 5v14l11-7z" fill="currentColor" />
-          </svg>
-
-          <span className="hourly-timeline__pill-text">
-            Third Wave, Koramangala
-          </span>
-
-          <svg
-            className="hourly-timeline__pill-caret"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              d="M6 9l6 6 6-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+        <CafePicker />
       </div>
     </section>
   )

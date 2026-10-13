@@ -1,11 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
-import { AMBIENCE_TRACKS, playAmbience, setAmbienceVolume } from './ambience'
-   import './AmbienceMenu.css'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import {
+  AMBIENCE_TRACKS,
+  playAmbience,
+  setAmbienceVolume,
+  subscribeAmbience,
+  getAmbienceId,
+} from './ambience'
+import './AmbienceMenu.css'
 
 function AmbienceMenu() {
   const [open, setOpen] = useState(false)
-  const [track, setTrack] = useState('off')
   const [volume, setVolume] = useState(60)
+  const track = useSyncExternalStore(subscribeAmbience, getAmbienceId)
   const rootRef = useRef(null)
 
   useEffect(() => {
@@ -31,14 +37,7 @@ function AmbienceMenu() {
   }, [open])
 
   function chooseTrack(id) {
-    if (id === track && track !== 'off') {
-      setTrack('off')
-      playAmbience('off')
-      return
-    }
-
-    setTrack(id)
-    playAmbience(id)
+    playAmbience(id === track && track !== 'off' ? 'off' : id)
   }
 
   function changeVolume(event) {

@@ -26,5 +26,9 @@
   },
   "optionalDependencies": {
     "@rolldown/binding-linux-x64-gnu": "X.Y.Z"
+  },
+  "scripts": {
+    "build": "vite build",
+    "postinstall": "bun run build"
   }
 }
