@@ -115,30 +115,6 @@
   transform: translate(-50%, -50%);
 }
 
-.hourly-timeline__now:hover .hourly-timeline__now-plus {
-  transform: translateX(-50%) scale(1.2);
-}
-
-.hourly-timeline__now-plus {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  margin-bottom: 4px;
-  color: #111111;
-  transform: translateX(-50%);
-  transition: transform 0.2s ease;
-}
-
-.hourly-timeline__now-plus svg {
-  width: 12px;
-  height: 12px;
-}
-
 .hourly-timeline__tick {
   position: absolute;
   top: 0;
@@ -460,13 +436,14 @@
 }
 
 .todo-panel {
-  position: static;
-  flex: 0 0 340px;
-  z-index: 20;
+  position: absolute;
+  top: 32px;
+  right: 0;
+  z-index: 40;
   display: flex;
   flex-direction: column;
   width: 340px;
-  max-height: 80vh;
+  max-height: min(80vh, 560px);
   padding: 18px;
   border-radius: 14px;
   border: 1px solid #ececec;
@@ -715,13 +692,9 @@
   color: #000;
 }
 @media (max-width: 720px) {
-  .timeline-shell--open {
-    flex-direction: column;
-  }
-
   .todo-panel {
-    flex: none;
-    width: 100%;
-    max-height: 60vh;
+    top: 24px;
+    width: min(340px, calc(100vw - 32px));
+    max-height: 70vh;
   }
 }

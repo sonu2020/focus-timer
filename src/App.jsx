@@ -3,7 +3,9 @@ import './App.css'
 import Header from './Header'
 import HomePage from './HomePage'
 import HourlyTimeline from './HourlyTimeline'
+import SprintCompleteModal from './SprintCompleteModal'
 import SprintModal from './SprintModal'
+import { requestNotificationPermission, unlockBlockAudio } from './blockAlerts'
 
 const labels = {
   pomodoro: 'Pomodoro',
@@ -49,14 +51,29 @@ function readSavedSprint() {
   }
 }
 
+function isSprintActive(sprint) {
+  if (!sprint) return false
+
+  const now = new Date()
+  const minutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60
+  const start = sprint.startHour * 60
+  const end = sprint.endHour * 60
+
+  if (end === start) return true
+  if (end > start) return minutes >= start && minutes < end
+
+  return minutes >= start || minutes < end
+}
+
 function App() {
   const [mode, setMode] = useState('pomodoro')
   const [secondsLeft, setSecondsLeft] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
   const [completed, setCompleted] = useState(0)
-  // First-time visitors see the home page, returning ones the timeline
+  // Resume the timeline only while the saved sprint is running;
+  // otherwise (no sprint, hasn't started yet, or already over) show the home page
   const [viewMode, setViewMode] = useState(() =>
-    readSavedSprint() ? 'timeline' : 'home',
+    isSprintActive(readSavedSprint()) ? 'timeline' : 'home',
   )
   const [scrollLocked, setScrollLocked] = useState(true)
   const [aboutVisible, setAboutVisible] = useState(false)
@@ -66,6 +83,9 @@ function App() {
   const [sprintConfig, setSprintConfig] = useState(
     () => readSavedSprint() ?? DEFAULT_SPRINT,
   )
+  const [todos, setTodos] = useState([])
+  const [todosOpen, setTodosOpen] = useState(false)
+  const [sprintEnded, setSprintEnded] = useState(false)
 
   const endTime = useRef(null)
 
@@ -99,6 +119,13 @@ function App() {
 
     observer.observe(about)
     return () => observer.disconnect()
+  }, [])
+
+  // the first interaction unlocks audio so the block-end chime can play later
+  useEffect(() => {
+    const unlock = () => unlockBlockAudio()
+    window.addEventListener('pointerdown', unlock, { once: true })
+    return () => window.removeEventListener('pointerdown', unlock)
   }, [])
 
   useEffect(() => {
@@ -173,6 +200,8 @@ function App() {
 
    // Saves the chosen settings and starts the countdown from this moment
   function confirmSprint(form) {
+    requestNotificationPermission()
+
     const next = { ...DEFAULT_SPRINT, ...form, startedAt: Date.now() }
 
     setSprintConfig(next)
@@ -184,7 +213,20 @@ function App() {
     }
 
     setIsModalOpen(false)
+    setSprintEnded(false)
+    setTodosOpen(false)
     setViewMode('timeline')
+  }
+
+  // when the sprint's time window is over, ask the visitor to wrap up
+  function handleSprintEnd() {
+    setTodosOpen(false)
+    setSprintEnded(true)
+  }
+
+  function handleSprintDone() {
+    setSprintEnded(false)
+    setViewMode('home')
   }
 
   function goToAbout(event) {
@@ -205,7 +247,12 @@ function App() {
       className={`app ${mode}${viewMode === 'timeline' ? ' timeline-mode' : ''}`}
     >
       {viewMode !== 'home' && (
-        <Header onStart={() => openModal('update')} />
+        <Header
+          onStart={() => openModal('update')}
+          todoOpen={todosOpen}
+          todoCount={todos.filter((todo) => !todo.done).length}
+          onToggleTodos={() => setTodosOpen((open) => !open)}
+        />
       )}
 
       {viewMode === 'home' ? (
@@ -281,7 +328,14 @@ function App() {
               </div>
             ) : (
               <div className="view timeline-view" key="timeline">
-                <HourlyTimeline config={sprintConfig} />
+                <HourlyTimeline
+                  config={sprintConfig}
+                  todos={todos}
+                  setTodos={setTodos}
+                  todosOpen={todosOpen}
+                  setTodosOpen={setTodosOpen}
+                  onSprintEnd={handleSprintEnd}
+                />
               </div>
             )}
           </main>
@@ -340,6 +394,8 @@ function App() {
           onStart={confirmSprint}
         />
       )}
+
+      <SprintCompleteModal open={sprintEnded} onDone={handleSprintDone} />
     </div>
   )
 }

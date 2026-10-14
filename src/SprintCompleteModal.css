@@ -1,0 +1,71 @@
+.sprint-complete {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.sprint-complete__dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 360px;
+  box-sizing: border-box;
+  padding: 32px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #111111;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+}
+
+.sprint-complete__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.sprint-complete__icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.sprint-complete__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.sprint-complete__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+.sprint-complete__button {
+  margin-top: 6px;
+  padding: 11px 28px;
+  border: 0;
+  border-radius: 8px;
+  background: #000000;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.sprint-complete__button:hover {
+  opacity: 0.92;
+  transform: none;
+}
