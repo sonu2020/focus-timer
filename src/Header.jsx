@@ -1,7 +1,7 @@
 import './Header.css'
 // import AmbienceMenu from './AmbienceMenu'
 
-function Header({ onStart }) {
+function Header({ onStart, todoOpen, todoCount, onToggleTodos }) {
   const today = new Date()
   const day = today.toLocaleDateString('en-US', { weekday: 'long' })
   const monthYear = today.toLocaleDateString('en-US', {
@@ -18,6 +18,34 @@ function Header({ onStart }) {
         </div>
 
         <div className="app-header__actions">
+          <button
+            type="button"
+            className="app-header__todo"
+            onClick={onToggleTodos}
+            aria-expanded={todoOpen}
+            aria-controls="todo-panel"
+          >
+            <svg
+              className="app-header__todo-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 5v14M5 12h14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+
+            <span>Add task</span>
+
+            {todoCount > 0 && (
+              <span className="app-header__todo-count">{todoCount}</span>
+            )}
+          </button>
+
           <button type="button" className="app-header__start" onClick={onStart}>
             Update Sprint
           </button>

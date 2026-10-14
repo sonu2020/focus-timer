@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './HourlyTimeline.css'
+import { notifyBlockEnd } from './blockAlerts'
 import CafePicker from './CafePicker'
 
 const DAY_MINUTES = 1440
@@ -63,15 +64,23 @@ function defaultEndHour(startHour, endHour) {
   return Math.min(startHour + 1, endHour)
 }
 
-function HourlyTimeline({ config }) {
+function HourlyTimeline({
+  config,
+  todos,
+  setTodos,
+  todosOpen,
+  setTodosOpen,
+  onSprintEnd,
+}) {
   const startHour = config?.startHour ?? 9
   const endHour = config?.endHour ?? 19
   const blockCount = Math.max(1, config?.blockCount ?? 10)
   const theme = config?.theme ?? '#52d696'
 
+  const onSprintEndRef = useRef(onSprintEnd)
+  const previousBlockRef = useRef(null)
+
   const [minutes, setMinutes] = useState(getMinutesNow)
-  const [todosOpen, setTodosOpen] = useState(false)
-  const [todos, setTodos] = useState([])
   const [draft, setDraft] = useState('')
   const [draftStart, setDraftStart] = useState(toTimeValue(startHour))
   const [draftEnd, setDraftEnd] = useState(() =>
@@ -153,6 +162,11 @@ function HourlyTimeline({ config }) {
 
   const inRange = elapsed >= 0 && elapsed < span
   const nowPercent = inRange ? (elapsed / span) * 100 : 0
+
+  const endHourMinutes = endHour * 60
+  const sprintEnded = wraps
+    ? minutes >= endHourMinutes && minutes < startMinutes
+    : minutes >= endHourMinutes
   const current = formatHour(Math.floor(minutes / 60) % 24)
 
   const blockSpan = span / blockCount
@@ -166,13 +180,13 @@ function HourlyTimeline({ config }) {
     return { index, progress }
   })
 
+  const activeIndex = inRange
+    ? Math.min(blockCount - 1, Math.floor(elapsed / blockSpan))
+    : null
+
   let countdown = null
 
-  if (inRange) {
-    const activeIndex = Math.min(
-      blockCount - 1,
-      Math.floor(elapsed / blockSpan),
-    )
+  if (activeIndex !== null) {
     const blockEnd = (activeIndex + 1) * blockSpan
     const remaining = blockEnd - elapsed
 
@@ -189,6 +203,28 @@ function HourlyTimeline({ config }) {
 
     return { hour, left: ((index + 1) / totalHours) * 100 }
   })
+
+  useEffect(() => {
+    onSprintEndRef.current = onSprintEnd
+  }, [onSprintEnd])
+
+  useEffect(() => {
+    if (activeIndex === null) {
+      previousBlockRef.current = null
+      return
+    }
+
+    const previous = previousBlockRef.current
+    previousBlockRef.current = activeIndex
+
+    if (previous !== null && activeIndex > previous) {
+      notifyBlockEnd()
+    }
+  }, [activeIndex])
+
+  useEffect(() => {
+    if (sprintEnded) onSprintEndRef.current?.()
+  }, [sprintEnded])
 
   return (
     <div className={`timeline-shell${todosOpen ? ' timeline-shell--open' : ''}`}>
@@ -208,19 +244,7 @@ function HourlyTimeline({ config }) {
             onClick={() => setTodosOpen((open) => !open)}
             aria-label={`Current time ${current.time} ${current.suffix} — open to-do list`}
             aria-expanded={todosOpen}
-          >
-            <span className="hourly-timeline__now-plus" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path
-                  d="M12 5v14M5 12h14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
-          </button>
+          />
         )}
 
         {ticks.map(({ hour, left }) => (
@@ -291,7 +315,7 @@ function HourlyTimeline({ config }) {
       )}
 
       {todosOpen && (
-        <aside className="todo-panel" aria-label="To-do list">
+        <aside id="todo-panel" className="todo-panel" aria-label="To-do list">
           <header className="todo-panel__header">
             <h3 className="todo-panel__title">To-do</h3>
 
