@@ -1,6 +1,7 @@
 import './HomePage.css'
+import { TeamButton } from './TeamModal'
 
-function HomePage({ onStart }) {
+function HomePage({ onStart, onOpenTeam, teamConnected, teamMemberCount }) {
   const today = new Date()
   const day = today.toLocaleDateString('en-US', { weekday: 'long' })
   const monthYear = today.toLocaleDateString('en-US', {
@@ -16,6 +17,12 @@ function HomePage({ onStart }) {
             <span className="home__day">{day}</span>
             <span className="home__month">{monthYear}</span>
           </div>
+
+          <TeamButton
+            onClick={onOpenTeam}
+            connected={teamConnected}
+            memberCount={teamMemberCount}
+          />
         </div>
       </header>
 

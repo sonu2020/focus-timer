@@ -1,9 +1,35 @@
 {
   "name": "focus-timer",
+  "main": "worker/index.js",
   "compatibility_date": "2026-10-06",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
   },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "TEAM_ROOMS",
+        "class_name": "TeamRoom"
+      }
+    ]
+  },
+  "send_email": [
+    {
+      "name": "EMAIL"
+    }
+  ],
+  "vars": {
+    "INVITE_FROM_EMAIL": "invites@your-domain.com",
+    "INVITE_FROM_NAME": "Focus Timer"
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["TeamRoom"]
+    }
+  ],
   "previews": {}
 }

@@ -83,10 +83,6 @@ function HourlyTimeline({
   const onSprintEndRef = useRef(onSprintEnd)
   const previousBlockRef = useRef(null)
 
-  // The countdown starts when the sprint was saved
-  const [mountedAt] = useState(() => Date.now())
-  const startedAt = config?.startedAt ?? mountedAt
-
   const [nowMs, setNowMs] = useState(() => Date.now())
   const [draft, setDraft] = useState('')
   const [draftStart, setDraftStart] = useState(toTimeValue(startMin))
@@ -162,15 +158,31 @@ function HourlyTimeline({
 
   if (span === 0) span = DAY_MINUTES
 
-  // Minutes since the sprint was saved (the stopwatch)
-  const elapsed = Math.max(0, (nowMs - startedAt) / 60000)
+  // Minute of the day right now (with seconds), so the timeline follows the clock
+  const nowDate = new Date(nowMs)
+  const nowMin =
+    nowDate.getHours() * 60 + nowDate.getMinutes() + nowDate.getSeconds() / 60
 
-  const finished = elapsed >= span
-  const inRange = !finished
-  const remainingMinutes = Math.max(0, span - elapsed)
+  // The sprint runs between its start and end clock times, not from the click
+  const started = wraps
+    ? nowMin >= startMin || nowMin < endMin
+    : nowMin >= startMin
+  const finished = wraps
+    ? nowMin >= endMin && nowMin < startMin
+    : nowMin >= endMin
+  const inRange = started && !finished
+
+  // Minutes since the start time (kept inside the sprint window)
+  let elapsed = 0
+
+  if (inRange) {
+    elapsed = nowMin - startMin
+    if (elapsed < 0) elapsed += DAY_MINUTES
+  }
+
+  const remainingMinutes = inRange ? Math.max(0, span - elapsed) : span
   const nowPercent = inRange ? (elapsed / span) * 100 : 0
-  const currentHour = new Date(nowMs).getHours()
-  const current = formatHour(currentHour)
+  const current = formatHour(nowDate.getHours())
 
   const sprintEnded = finished
 
