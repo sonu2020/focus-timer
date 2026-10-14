@@ -19,16 +19,18 @@ const defaultMinutes = {
 
 const DEFAULT_SPRINT = {
   startHour: 9,
+  startMinute: 0,
   endHour: 19,
+  endMinute: 0,
   length: '10',
   blockCount: 10,
   theme: '#52d696',
 }
 
-// NEW: where the visitor's chosen times are saved in their browser
+// Where the visitor's chosen times are saved in their browser
 const SPRINT_STORAGE_KEY = 'focus-timer.sprint-config'
 
-// NEW: returns the saved sprint settings, or null for a first-time visitor
+// Returns the saved sprint settings, or null for a first-time visitor
 function readSavedSprint() {
   try {
     const saved = JSON.parse(localStorage.getItem(SPRINT_STORAGE_KEY))
@@ -52,7 +54,7 @@ function App() {
   const [secondsLeft, setSecondsLeft] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
   const [completed, setCompleted] = useState(0)
-  // CHANGED: first-time visitors see the home page, returning ones the timeline
+  // First-time visitors see the home page, returning ones the timeline
   const [viewMode, setViewMode] = useState(() =>
     readSavedSprint() ? 'timeline' : 'home',
   )
@@ -60,7 +62,7 @@ function App() {
   const [aboutVisible, setAboutVisible] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState('create')
-  // CHANGED: start from the saved settings when there are any
+  // Start from the saved settings when there are any
   const [sprintConfig, setSprintConfig] = useState(
     () => readSavedSprint() ?? DEFAULT_SPRINT,
   )
@@ -160,7 +162,6 @@ function App() {
     setSecondsLeft(defaultMinutes[mode] * 60)
   }
 
-  // CHANGED: parameter renamed so it doesn't shadow the `mode` state above
   function openModal(nextModalMode = 'create') {
     setModalMode(nextModalMode)
     setIsModalOpen(true)
@@ -170,12 +171,14 @@ function App() {
     setIsModalOpen(false)
   }
 
-  // CHANGED: also saves the chosen settings in the browser
+   // Saves the chosen settings and starts the countdown from this moment
   function confirmSprint(form) {
-    setSprintConfig(form)
+    const next = { ...DEFAULT_SPRINT, ...form, startedAt: Date.now() }
+
+    setSprintConfig(next)
 
     try {
-      localStorage.setItem(SPRINT_STORAGE_KEY, JSON.stringify(form))
+      localStorage.setItem(SPRINT_STORAGE_KEY, JSON.stringify(next))
     } catch {
       // storage unavailable, the settings just won't be remembered
     }
@@ -209,131 +212,134 @@ function App() {
         <HomePage onStart={() => openModal('create')} />
       ) : (
         <section className="landing">
-        <main
-          className={`content${viewMode === 'timeline' ? ' content--timeline' : ''}`}
-        >
-          {viewMode === 'timer' ? (
-            <div className="view" key="timer">
-              <section className="timer-card">
-                <div className="tabs" aria-label="Timer mode">
-                  {Object.entries(labels).map(([key, label]) => (
-                    <button
-                      key={key}
-                      className={mode === key ? 'tab active' : 'tab'}
-                      onClick={() => selectMode(key)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="timer-circle">
-                  <svg
-                    className="progress-ring"
-                    viewBox="0 0 240 240"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      className="ring-background"
-                      cx="120"
-                      cy="120"
-                      r={radius}
-                    />
-
-                    <circle
-                      className="ring-progress"
-                      cx="120"
-                      cy="120"
-                      r={radius}
-                      strokeDasharray={circumference}
-                      strokeDashoffset={circumference * (1 - progress)}
-                    />
-                  </svg>
-
-                  <div className="time" role="timer" aria-live="off">
-                    {minutes}:{seconds}
+          <main
+            className={`content${viewMode === 'timeline' ? ' content--timeline' : ''}`}
+          >
+            {viewMode === 'timer' ? (
+              <div className="view" key="timer">
+                <section className="timer-card">
+                  <div className="tabs" aria-label="Timer mode">
+                    {Object.entries(labels).map(([key, label]) => (
+                      <button
+                        key={key}
+                        className={mode === key ? 'tab active' : 'tab'}
+                        onClick={() => selectMode(key)}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
-                </div>
 
-                <div className="controls">
-                  <button className="start-button" onClick={toggleTimer}>
-                    {isRunning ? 'PAUSE' : 'START'}
-                  </button>
+                  <div className="timer-circle">
+                    <svg
+                      className="progress-ring"
+                      viewBox="0 0 240 240"
+                      aria-hidden="true"
+                    >
+                      <circle
+                        className="ring-background"
+                        cx="120"
+                        cy="120"
+                        r={radius}
+                      />
 
-                  <button className="reset-button" onClick={resetTimer}>
-                    Reset
-                  </button>
-                </div>
-              </section>
+                      <circle
+                        className="ring-progress"
+                        cx="120"
+                        cy="120"
+                        r={radius}
+                        strokeDasharray={circumference}
+                        strokeDashoffset={circumference * (1 - progress)}
+                      />
+                    </svg>
 
-              <p className="session-count">
-                Completed focus sessions: {completed}
-              </p>
+                    <div className="time" role="timer" aria-live="off">
+                      {minutes}:{seconds}
+                    </div>
+                  </div>
 
-              <p className="message">
-                {mode === 'pomodoro'
-                  ? 'Time to focus!'
-                  : 'Take a break—you earned it.'}
-              </p>
-            </div>
-          ) : (
-            <div className="view timeline-view" key="timeline">
-              <HourlyTimeline config={sprintConfig} />
-            </div>
+                  <div className="controls">
+                    <button className="start-button" onClick={toggleTimer}>
+                      {isRunning ? 'PAUSE' : 'START'}
+                    </button>
+
+                    <button className="reset-button" onClick={resetTimer}>
+                      Reset
+                    </button>
+                  </div>
+                </section>
+
+                <p className="session-count">
+                  Completed focus sessions: {completed}
+                </p>
+
+                <p className="message">
+                  {mode === 'pomodoro'
+                    ? 'Time to focus!'
+                    : 'Take a break—you earned it.'}
+                </p>
+              </div>
+            ) : (
+              <div className="view timeline-view" key="timeline">
+                <HourlyTimeline config={sprintConfig} />
+              </div>
+            )}
+          </main>
+
+          {viewMode !== 'timeline' && (
+            <footer className={`footer${aboutVisible ? ' footer--hidden' : ''}`}>
+              <nav className="footer-links" aria-label="Footer">
+                <a className="footer-link" href="#about" onClick={goToAbout}>
+                  About
+                </a>
+              </nav>
+            </footer>
           )}
-        </main>
-
-        {viewMode !== 'timeline' && (
-          <footer className={`footer${aboutVisible ? ' footer--hidden' : ''}`}>
-            <nav className="footer-links" aria-label="Footer">
-              <a className="footer-link" href="#about" onClick={goToAbout}>
-                About
-              </a>
-            </nav>
-          </footer>
-        )}
         </section>
       )}
 
       {viewMode !== 'timeline' && viewMode !== 'home' && (
         <section className="about" id="about">
-        <h2 className="about-title">About</h2>
+          <h2 className="about-title">About</h2>
 
-        <p className="about-intro">
-          Focus Timer is a small, browser-based Pomodoro companion. Pick a tab,
-          press start, and let the ring carry you through the session—no
-          accounts, no dashboards, no clutter.
-        </p>
+          <p className="about-intro">
+            Focus Timer is a small, browser-based Pomodoro companion. Pick a
+            tab, press start, and let the ring carry you through the
+            session—no accounts, no dashboards, no clutter.
+          </p>
 
-        <div className="about-grid">
-          <article className="about-item">
-            <h3>Timer &amp; timeline</h3>
-            <p>
-              Hit <strong>Start a Sprint</strong> in the header to kick off a
-              Pomodoro focus session, then flow through short and long breaks
-              automatically. Switch between the classic countdown and a
-              timeline view that shows how much of your day is already spent.
-            </p>
-          </article>
+          <div className="about-grid">
+            <article className="about-item">
+              <h3>Timer &amp; timeline</h3>
+              <p>
+                Hit <strong>Start a Sprint</strong> in the header to kick off a
+                Pomodoro focus session, then flow through short and long breaks
+                automatically. Switch between the classic countdown and a
+                timeline view that shows how much of your day is already spent.
+              </p>
+            </article>
 
-          <article className="about-item">
-            <h3>Storage</h3>
-            <p>
-              Your timeline settings are saved locally in this browser, and
-              stay there until you change them.
-            </p>
-          </article>
-        </div>
+            <article className="about-item">
+              <h3>Storage</h3>
+              <p>
+                Your timeline settings are saved locally in this browser, and
+                stay there until you change them.
+              </p>
+            </article>
+          </div>
         </section>
       )}
 
-      <SprintModal
-        open={isModalOpen}
-        mode={modalMode}
-        initial={sprintConfig}
-        onClose={closeModal}
-        onStart={confirmSprint}
-      />
+      {/* Only mounted while open, so it always starts with the latest saved values */}
+      {isModalOpen && (
+        <SprintModal
+          open
+          mode={modalMode}
+          initial={sprintConfig}
+          onClose={closeModal}
+          onStart={confirmSprint}
+        />
+      )}
     </div>
   )
 }

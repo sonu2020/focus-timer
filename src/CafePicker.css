@@ -1,0 +1,282 @@
+/*
+  Every size = (number measured from your design) x --u
+  --u: 1px    -> exact size of the design
+  --u: 0.72px -> reduced size (default)
+*/
+.cafe-player,
+.cafe-player-layer {
+  --u: 0.72px;
+}
+
+.cafe-player {
+  position: relative;
+  display: inline-block;
+}
+
+.cafe-player button,
+.cafe-player-layer button {
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cafe-player-layer ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------- Full-screen shadow (covers the header too) ---------- */
+.cafe-player__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.58);
+}
+
+/* ---------- Black pill (365 x 50) ---------- */
+.cafe-player__pill {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: calc(365 * var(--u));
+  max-width: calc(100vw - 32px);
+  height: calc(50 * var(--u));
+  padding: 0 calc(24 * var(--u)) 0 calc(26 * var(--u));
+  border: 0;
+  border-radius: calc(6 * var(--u));
+  background: #000;
+  color: #fff;
+}
+
+.cafe-player__pill-icon {
+  display: grid;
+  place-items: center;
+  width: calc(29 * var(--u));
+  height: calc(29 * var(--u));
+  border-radius: calc(6 * var(--u));
+  background: #fff;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.cafe-player__pill-icon svg {
+  width: calc(19 * var(--u));
+  height: calc(19 * var(--u));
+}
+
+.cafe-player__pill-text {
+  flex: 1;
+  min-width: 0;
+  padding-left: calc(51 * var(--u));
+  text-align: left;
+  font-size: calc(17 * var(--u));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cafe-player__pill-caret {
+  width: calc(20 * var(--u));
+  height: calc(20 * var(--u));
+  flex-shrink: 0;
+}
+
+/* ---------- White card (580 wide, fixed above the pill) ---------- */
+.cafe-player__card {
+  --u: 0.6px; /* card size only: was 0.72px */
+  position: fixed;
+  z-index: 9999;
+  box-sizing: border-box;
+  width: calc(580 * var(--u));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  padding: calc(49 * var(--u)) 0 calc(27 * var(--u));
+  border-radius: calc(8 * var(--u));
+  background: #fff;
+  color: #000;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+/* Close button (38 x 38) */
+.cafe-player__close {
+  position: absolute;
+  top: calc(49 * var(--u));
+  right: calc(51 * var(--u));
+  display: grid;
+  place-items: center;
+  width: calc(38 * var(--u));
+  height: calc(38 * var(--u));
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #c4c4c4;
+  color: #fff;
+}
+
+.cafe-player__close svg {
+  width: calc(20 * var(--u));
+  height: calc(20 * var(--u));
+}
+
+/* Progress bar */
+.cafe-player__bar {
+  position: relative;
+  height: calc(5 * var(--u));
+  margin: calc(96 * var(--u)) calc(77 * var(--u)) 0 calc(93 * var(--u));
+  border-radius: 3px;
+  background: #d9d9d9;
+}
+
+.cafe-player__bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: #000;
+}
+
+.cafe-player__bar-dot {
+  position: absolute;
+  top: 50%;
+  box-sizing: border-box;
+  width: calc(19 * var(--u));
+  height: calc(19 * var(--u));
+  border: calc(3 * var(--u)) solid #e9e9e9;
+  border-radius: 50%;
+  background: #000;
+  transform: translate(-50%, -50%);
+}
+
+/* Time labels */
+.cafe-player__times {
+  display: flex;
+  justify-content: space-between;
+  margin: calc(19 * var(--u)) calc(50 * var(--u)) 0 calc(51 * var(--u));
+  font-size: calc(21 * var(--u));
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Divider */
+.cafe-player__divider {
+  height: 2px;
+  margin: calc(34 * var(--u)) calc(50 * var(--u)) 0 calc(51 * var(--u));
+  background: #e0e0e0;
+}
+
+/* Controls */
+.cafe-player__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(50 * var(--u));
+  margin-top: calc(34 * var(--u));
+}
+
+.cafe-player__skip {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #666;
+}
+
+.cafe-player__skip svg {
+  width: calc(49 * var(--u));
+  height: calc(26 * var(--u));
+}
+
+.cafe-player__toggle {
+  display: grid;
+  place-items: center;
+  width: calc(68 * var(--u));
+  height: calc(68 * var(--u));
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #000;
+  color: #fff;
+}
+
+.cafe-player__toggle svg {
+  width: calc(30 * var(--u));
+  height: calc(30 * var(--u));
+}
+
+/* ---------- Cafe list ---------- */
+.cafe-player__list {
+  margin: calc(9 * var(--u)) calc(67 * var(--u)) 0 calc(68 * var(--u));
+}
+
+.cafe-player__row {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: calc(80 * var(--u));
+  padding-right: calc(8 * var(--u));
+  border-bottom: 1px solid #e3e3e3;
+}
+
+.cafe-player__row:last-child {
+  border-bottom: 0;
+}
+
+.cafe-player__item {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(12 * var(--u));
+  min-width: 0;
+  height: 100%;
+  padding: 0 0 0 calc(26 * var(--u));
+  border: 0;
+  background: none;
+  color: #000;
+  font-size: calc(17 * var(--u));
+  text-align: left;
+}
+
+.cafe-player__item-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cafe-player__item-time {
+  flex-shrink: 0;
+  font-size: calc(21 * var(--u));
+  font-variant-numeric: tabular-nums;
+}
+
+.cafe-player__wave {
+  flex-shrink: 0;
+  width: calc(26 * var(--u));
+  height: calc(26 * var(--u));
+}
+
+.cafe-player__more {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: calc(28 * var(--u));
+  height: calc(36 * var(--u));
+  margin-left: calc(14 * var(--u));
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #000;
+}
+
+.cafe-player__more svg {
+  width: calc(20 * var(--u));
+  height: calc(24 * var(--u));
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 480px) {
+  .cafe-player,
+  .cafe-player-layer {
+    --u: 0.58px;
+  }
+}
