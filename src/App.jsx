@@ -252,6 +252,26 @@ function App() {
     setViewMode('home')
   }
 
+  // Extend the sprint's end time without losing the elapsed time or the tasks
+  function handleSprintExtend(end) {
+    const next = {
+      ...sprintConfig,
+      endHour: end.endHour,
+      endMinute: end.endMinute,
+    }
+
+    setSprintConfig(next)
+
+    try {
+      localStorage.setItem(SPRINT_STORAGE_KEY, JSON.stringify(next))
+    } catch {
+      // storage unavailable, the settings just won't be remembered
+    }
+
+    setSprintEnded(false)
+    setViewMode('timeline')
+  }
+
   function goToAbout(event) {
     event.preventDefault()
     setScrollLocked(false)
@@ -418,7 +438,13 @@ function App() {
         />
       )}
 
-      <SprintCompleteModal open={sprintEnded} onDone={handleSprintDone} />
+      {sprintEnded && (
+        <SprintCompleteModal
+          onDone={handleSprintDone}
+          onExtend={handleSprintExtend}
+          config={sprintConfig}
+        />
+      )}
     </div>
   )
 }
