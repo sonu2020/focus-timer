@@ -1,16 +1,7 @@
 import './Header.css'
-import { TeamButton } from './TeamModal'
 // import AmbienceMenu from './AmbienceMenu'
 
-function Header({
-  onStart,
-  todoOpen,
-  todoCount,
-  onToggleTodos,
-  onOpenTeam,
-  teamConnected,
-  teamMemberCount,
-}) {
+function Header({ onStart, todoOpen, todoCount, onToggleTodos }) {
   const today = new Date()
   const day = today.toLocaleDateString('en-US', { weekday: 'long' })
   const monthYear = today.toLocaleDateString('en-US', {
@@ -58,12 +49,6 @@ function Header({
           <button type="button" className="app-header__start" onClick={onStart}>
             Update Sprint
           </button>
-
-          <TeamButton
-            onClick={onOpenTeam}
-            connected={teamConnected}
-            memberCount={teamMemberCount}
-          />
 
           {/* <AmbienceMenu /> */}
         </div>

@@ -245,6 +245,91 @@
   color: #6b7280;
   text-align: left;
 }
+
+.sprint-modal__invite-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333333;
+  cursor: pointer;
+}
+
+.sprint-modal__invite-toggle input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #000000;
+  cursor: pointer;
+}
+
+.sprint-modal__invite {
+  margin-top: 12px;
+}
+
+.sprint-modal__invite-row {
+  display: flex;
+  gap: 8px;
+}
+
+.sprint-modal__link {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background-color: #f4f4f5;
+  color: #111111;
+  font: inherit;
+  font-size: 13px;
+  text-overflow: ellipsis;
+}
+
+.sprint-modal__link:focus {
+  border-color: #111111;
+  outline: none;
+}
+
+.sprint-modal__send {
+  flex: none;
+  padding: 0 16px;
+  border: 1px solid #111111;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111111;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sprint-modal__send:hover {
+  background: #f4f4f5;
+  transform: none;
+}
+
+.sprint-modal__send:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.sprint-modal__invite-status {
+  margin: 8px 0 0;
+  font-size: 12px;
+  text-align: left;
+  color: #6b7280;
+}
+
+.sprint-modal__invite-status--sent {
+  color: #2e7d56;
+}
+
+.sprint-modal__invite-status--error {
+  color: #c0392b;
+}
+
 @media (max-width: 420px) {
   .sprint-modal__segments {
     grid-template-columns: repeat(2, minmax(0, 1fr));

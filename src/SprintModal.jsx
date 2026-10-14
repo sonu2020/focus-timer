@@ -58,7 +58,7 @@ function openPicker(event) {
   }
 }
 
-function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
+function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetInviteLink }) {
   const isUpdate = mode === 'update'
 
   const [startTime, setStartTime] = useState(
@@ -74,7 +74,33 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
   )
   const [theme, setTheme] = useState(initial?.themeName ?? 'Green')
 
+  // Optional invite: share a link that recreates this sprint
+  const [invite, setInvite] = useState(false)
+  const [copied, setCopied] = useState(false)
+
   const blockCount = length === 'Customize' ? customBlocks : Number(length)
+
+  // Reads the settings as they currently stand in the modal
+  function currentConfig() {
+    const start = parseTime(startTime)
+    const end = parseTime(endTime)
+    const selected = THEMES.find((item) => item.name === theme)
+
+    return {
+      startHour: start?.hour ?? 9,
+      startMinute: start?.minute ?? 0,
+      endHour: end?.hour ?? 19,
+      endMinute: end?.minute ?? 0,
+      startTime,
+      endTime,
+      length,
+      blockCount,
+      themeName: theme,
+      theme: selected ? selected.value : '#52d696',
+    }
+  }
+
+  const shareLink = invite ? onGetInviteLink(currentConfig()) : ''
 
   useEffect(() => {
     if (!open) return
@@ -111,20 +137,22 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
       return
     }
 
-    const selected = THEMES.find((item) => item.name === theme)
+    onStart(currentConfig())
+  }
 
-    onStart({
-      startHour: start.hour,
-      startMinute: start.minute,
-      endHour: end.hour,
-      endMinute: end.minute,
-      startTime,
-      endTime,
-      length,
-      blockCount,
-      themeName: theme,
-      theme: selected ? selected.value : '#52d696',
-    })
+  function toggleInvite(checked) {
+    setInvite(checked)
+    setCopied(false)
+  }
+
+  async function copyInviteLink() {
+    try {
+      await navigator.clipboard.writeText(shareLink)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // clipboard blocked; the link field stays selectable for manual copy
+    }
   }
 
   if (!open) return null
@@ -257,6 +285,44 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
               />
             ))}
           </div>
+        </div>
+
+        <div className="sprint-modal__field">
+          <label className="sprint-modal__invite-toggle">
+            <input
+              type="checkbox"
+              checked={invite}
+              onChange={(event) => toggleInvite(event.target.checked)}
+            />
+            <span>Share this sprint with a teammate (optional)</span>
+          </label>
+
+          {invite && (
+            <div className="sprint-modal__invite">
+              <div className="sprint-modal__invite-row">
+                <input
+                  className="sprint-modal__link"
+                  type="text"
+                  readOnly
+                  value={shareLink}
+                  onFocus={(event) => event.target.select()}
+                  aria-label="Share link"
+                />
+
+                <button
+                  type="button"
+                  className="sprint-modal__send"
+                  onClick={copyInviteLink}
+                >
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+
+              <p className="sprint-modal__invite-status">
+                Anyone who opens this link gets this sprint setup.
+              </p>
+            </div>
+          )}
         </div>
 
         <button

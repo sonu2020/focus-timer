@@ -5,14 +5,13 @@ import HomePage from './HomePage'
 import HourlyTimeline from './HourlyTimeline'
 import SprintCompleteModal from './SprintCompleteModal'
 import SprintModal from './SprintModal'
-import TeamModal from './TeamModal'
 import {
   useTeamRoom,
   readIdentity,
   saveIdentity,
-  clearIdentity,
   readInviteTeam,
 } from './useTeamRoom'
+import { getSprintLink, readSharedSprint } from './sprintShare'
 import { requestNotificationPermission, unlockBlockAudio } from './blockAlerts'
 
 const labels = {
@@ -92,39 +91,62 @@ function App() {
   const [secondsLeft, setSecondsLeft] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
   const [completed, setCompleted] = useState(0)
+  // A sprint carried in the URL (?sprint=...) opens straight away
+  const [sharedSprint] = useState(readSharedSprint)
+  const [incomingTeam] = useState(readInviteTeam)
   // Resume the timeline only while the saved sprint is running;
   // otherwise (no sprint, hasn't started yet, or already over) show the home page
   const [viewMode, setViewMode] = useState(() =>
-    isSprintActive(readSavedSprint()) ? 'timeline' : 'home',
+    sharedSprint || isSprintActive(readSavedSprint()) ? 'timeline' : 'home',
   )
   const [scrollLocked, setScrollLocked] = useState(true)
   const [aboutVisible, setAboutVisible] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState('create')
-  // Start from the saved settings when there are any
+  // Start from a shared sprint, then the saved settings, then the defaults
   const [localSprintConfig, setLocalSprintConfig] = useState(
-    () => readSavedSprint() ?? DEFAULT_SPRINT,
+    () => sharedSprint ?? readSavedSprint() ?? DEFAULT_SPRINT,
   )
   const [localTodos, setLocalTodos] = useState(readSavedTodos)
   const [todosOpen, setTodosOpen] = useState(false)
   const [sprintEnded, setSprintEnded] = useState(false)
-  const [identity, setIdentity] = useState(readIdentity)
-  const [teamOpen, setTeamOpen] = useState(false)
+  const [identity] = useState(() => {
+    // A visitor arriving through a team invite link joins that team on first load
+    const saved = readIdentity()
 
-  // Auto-open the Team modal if the visitor arrived via an invite link
-  const [inviteTeam, setInviteTeam] = useState('')
+    if (!incomingTeam || saved?.teamId === incomingTeam) return saved
+
+    const nextIdentity = { email: saved?.email ?? '', teamId: incomingTeam }
+    saveIdentity(nextIdentity)
+    return nextIdentity
+  })
+
+  // Persist a sprint opened from a link so a refresh keeps it
   useEffect(() => {
-    const team = readInviteTeam()
-    if (team) {
-      setInviteTeam(team)
-      setTeamOpen(true)
-      const url = new URL(window.location.href)
-      url.searchParams.delete('team')
-      url.searchParams.delete('join')
-      window.history.replaceState({}, '', url.pathname + url.search + url.hash)
+    if (!sharedSprint) return
+
+    try {
+      localStorage.setItem(SPRINT_STORAGE_KEY, JSON.stringify(sharedSprint))
+    } catch {
+      // storage unavailable, the sprint just won't be remembered
     }
-    // Only run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedSprint])
+
+  // Drop the share params from the address bar once they've been handled
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (!params.has('team') && !params.has('join') && !params.has('sprint')) return
+
+    params.delete('team')
+    params.delete('join')
+    params.delete('sprint')
+
+    const query = params.toString()
+    window.history.replaceState(
+      {},
+      '',
+      window.location.pathname + (query ? `?${query}` : '') + window.location.hash,
+    )
   }, [])
 
   // When part of a team, the team's room holds the shared tasks and settings;
@@ -278,25 +300,17 @@ function App() {
   function confirmSprint(form) {
     requestNotificationPermission()
 
-    // Sharing details are handled separately; the rest becomes the sprint config
-    const { share, teamId: formTeamId, email: formEmail, ...sprintFields } = form
-    const next = { ...DEFAULT_SPRINT, ...sprintFields }
-    const willShare = share && formTeamId && formEmail
-
+    const next = { ...DEFAULT_SPRINT, ...form }
     setLocalSprintConfig(next)
 
-    if (willShare) {
-      const nextIdentity = { email: formEmail.trim(), teamId: formTeamId.trim() }
-      saveIdentity(nextIdentity)
-      // Hand the sprint to the team as soon as the socket is open
-      pendingConfigRef.current = next
-      setIdentity(nextIdentity)
-    } else {
-      if (inTeam) {
-        clearIdentity()
-        setIdentity(null)
-      }
+    if (inTeam) {
+      // Store the shared sprint right away; queue a resend if the socket is down
+      setTeamConfig(next)
 
+      if (teamStatus !== 'online') {
+        pendingConfigRef.current = next
+      }
+    } else {
       try {
         localStorage.setItem(SPRINT_STORAGE_KEY, JSON.stringify(next))
       } catch {
@@ -345,18 +359,6 @@ function App() {
     setViewMode('timeline')
   }
 
-  function saveTeam(next) {
-    saveIdentity(next)
-    setIdentity(next)
-    setTeamOpen(false)
-  }
-
-  function leaveTeam() {
-    clearIdentity()
-    setIdentity(null)
-    setTeamOpen(false)
-  }
-
   function goToAbout(event) {
     event.preventDefault()
     setScrollLocked(false)
@@ -380,19 +382,11 @@ function App() {
           todoOpen={todosOpen}
           todoCount={todos.filter((todo) => !todo.done).length}
           onToggleTodos={() => setTodosOpen((open) => !open)}
-          onOpenTeam={() => setTeamOpen(true)}
-          teamConnected={collab.status === 'online'}
-          teamMemberCount={collab.members.length}
         />
       )}
 
       {viewMode === 'home' ? (
-        <HomePage
-          onStart={() => openModal('create')}
-          onOpenTeam={() => setTeamOpen(true)}
-          teamConnected={collab.status === 'online'}
-          teamMemberCount={collab.members.length}
-        />
+        <HomePage onStart={() => openModal('create')} />
       ) : (
         <section className="landing">
           <main
@@ -526,9 +520,9 @@ function App() {
           open
           mode={modalMode}
           initial={sprintConfig}
-          identity={identity}
           onClose={closeModal}
           onStart={confirmSprint}
+          onGetInviteLink={getSprintLink}
         />
       )}
 
@@ -539,20 +533,6 @@ function App() {
           config={sprintConfig}
         />
       )}
-
-      <TeamModal
-        open={teamOpen}
-        identity={identity}
-        status={collab.status}
-        members={collab.members}
-        initialTeam={inviteTeam}
-        onClose={() => {
-          setTeamOpen(false)
-          setInviteTeam('')
-        }}
-        onSave={saveTeam}
-        onLeave={leaveTeam}
-      />
     </div>
   )
 }
