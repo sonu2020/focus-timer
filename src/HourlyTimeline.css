@@ -186,14 +186,15 @@
   height: 100%;
   border-radius: 8px;
   background: var(--block-color, #52d696);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, calc(0.08 * (1 - var(--block-progress, 0))));
+  box-shadow: 0 10px 24px
+    rgba(0, 0, 0, calc(0.08 * (1 - var(--block-progress, 0))));
   transition:
     background 0.45s ease,
     box-shadow 0.45s ease;
 }
 
 .hourly-timeline__block::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -687,7 +688,32 @@
   color: #9ca3af;
   text-decoration: line-through;
 }
+/* ---------- Draining bars (bottom empties first) ---------- */
+.hourly-timeline__grid .hourly-timeline__block--drain {
+  position: relative;
+  overflow: hidden;
+  background: #ececec;
+  box-shadow: none;
+}
 
+.hourly-timeline__grid .hourly-timeline__block--drain::before,
+.hourly-timeline__grid .hourly-timeline__block--drain::after {
+  content: none;
+}
+
+.hourly-timeline__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.hourly-timeline__remaining {
+  margin-left: auto;
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #000;
+}
 @media (max-width: 720px) {
   .timeline-shell--open {
     flex-direction: column;

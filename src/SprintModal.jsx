@@ -16,16 +16,22 @@ const THEMES = [
   { name: 'Pink', value: '#ec4899', border: '#be185d' },
 ]
 
-// 9 -> "09:00" (the format a time input uses)
-function toTimeValue(hour24) {
-  return `${String(hour24).padStart(2, '0')}:00`
+// (9, 0) -> "09:00"  (the format a time input uses)
+function toTimeValue(hour24, minute = 0) {
+  return `${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
 
-// "09:30" -> 9 (the timeline works in whole hours)
-function hourFromTime(value) {
-  const hour = Number.parseInt(String(value).split(':')[0], 10)
+// "10:14" -> { hour: 10, minute: 14 }, or null while the field is empty/incomplete
+function parseTime(value) {
+  if (!value) return null
 
-  return Number.isNaN(hour) ? null : hour
+  const [h, m] = String(value).split(':')
+  const hour = Number.parseInt(h, 10)
+  const minute = Number.parseInt(m, 10)
+
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return null
+
+  return { hour, minute }
 }
 
 function Caret() {
@@ -43,10 +49,25 @@ function Caret() {
   )
 }
 
+// Open the browser's time picker when the field is clicked
+function openPicker(event) {
+  try {
+    event.currentTarget.showPicker()
+  } catch {
+    // showPicker is not supported or not allowed here; typing still works
+  }
+}
+
 function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
   const isUpdate = mode === 'update'
-  const [startHour, setStartHour] = useState(initial?.startHour ?? 9)
-  const [endHour, setEndHour] = useState(initial?.endHour ?? 19)
+
+  const [startTime, setStartTime] = useState(
+    initial?.startTime ?? toTimeValue(initial?.startHour ?? 9, initial?.startMinute ?? 0),
+  )
+  const [endTime, setEndTime] = useState(
+    initial?.endTime ?? toTimeValue(initial?.endHour ?? 19, initial?.endMinute ?? 0),
+  )
+  const [error, setError] = useState('')
   const [length, setLength] = useState(initial?.length ?? '10')
   const [customBlocks, setCustomBlocks] = useState(
     initial?.length === 'Customize' ? (initial.blockCount ?? 6) : 6,
@@ -67,21 +88,38 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
   }, [open, onClose])
 
   function changeStart(event) {
-    const hour = hourFromTime(event.target.value)
-    if (hour !== null) setStartHour(hour)
+    setStartTime(event.target.value)
+    setError('')
   }
 
   function changeEnd(event) {
-    const hour = hourFromTime(event.target.value)
-    if (hour !== null) setEndHour(hour)
+    setEndTime(event.target.value)
+    setError('')
   }
 
   function handleStart() {
+    const start = parseTime(startTime)
+    const end = parseTime(endTime)
+
+    if (!start || !end) {
+      setError('Please enter both a start and an end time.')
+      return
+    }
+
+    if (end.hour * 60 + end.minute <= start.hour * 60 + start.minute) {
+      setError('The end time must be after the start time.')
+      return
+    }
+
     const selected = THEMES.find((item) => item.name === theme)
 
     onStart({
-      startHour,
-      endHour,
+      startHour: start.hour,
+      startMinute: start.minute,
+      endHour: end.hour,
+      endMinute: end.minute,
+      startTime,
+      endTime,
       length,
       blockCount,
       themeName: theme,
@@ -129,9 +167,9 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
             id="sprint-start"
             className="sprint-modal__time"
             type="time"
-            step="3600"
-            value={toTimeValue(startHour)}
+            value={startTime}
             onChange={changeStart}
+            onClick={openPicker}
             required
           />
         </div>
@@ -144,16 +182,22 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
             id="sprint-end"
             className="sprint-modal__time"
             type="time"
-            step="3600"
-            value={toTimeValue(endHour)}
+            value={endTime}
             onChange={changeEnd}
+            onClick={openPicker}
             required
           />
         </div>
 
         <p className="sprint-modal__hint">
-          Click the clock icon or type a time. It is set to the whole hour.
+          Click the field or type a time, like 10:14.
         </p>
+
+        {error && (
+          <p className="sprint-modal__error" role="alert">
+            {error}
+          </p>
+        )}
 
         <div className="sprint-modal__field">
           <span className="sprint-modal__label">How long is the sprint?</span>
@@ -162,8 +206,9 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
               <button
                 key={option}
                 type="button"
-                className={`sprint-modal__segment${length === String(option) ? ' sprint-modal__segment--active' : ''
-                  }`}
+                className={`sprint-modal__segment${
+                  length === String(option) ? ' sprint-modal__segment--active' : ''
+                }`}
                 onClick={() => setLength(String(option))}
               >
                 {option}
@@ -171,8 +216,9 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
             ))}
 
             <select
-              className={`sprint-modal__segment sprint-modal__segment--select${length === 'Customize' ? ' sprint-modal__segment--active' : ''
-                }`}
+              className={`sprint-modal__segment sprint-modal__segment--select${
+                length === 'Customize' ? ' sprint-modal__segment--active' : ''
+              }`}
               value={length === 'Customize' ? String(customBlocks) : ''}
               onChange={(event) => {
                 setLength('Customize')
@@ -200,8 +246,9 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart }) {
               <button
                 key={item.name}
                 type="button"
-                className={`sprint-modal__swatch${theme === item.name ? ' sprint-modal__swatch--active' : ''
-                  }`}
+                className={`sprint-modal__swatch${
+                  theme === item.name ? ' sprint-modal__swatch--active' : ''
+                }`}
                 style={{ '--swatch': item.value, '--swatch-border': item.border }}
                 onClick={() => setTheme(item.name)}
                 aria-label={item.name}

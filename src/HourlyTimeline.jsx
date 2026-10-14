@@ -7,23 +7,14 @@ const DAY_MINUTES = 1440
 const COUNTDOWN_MINUTES = 5
 const COUNTDOWN_CRITICAL_MINUTES = 2.5
 
-function getMinutesNow() {
-  const now = new Date()
-
-  return (
-    now.getHours() * 60 +
-    now.getMinutes() +
-    now.getSeconds() / 60 +
-    now.getMilliseconds() / 60000
-  )
-}
-
-function formatCountdown(minutesLeft) {
+// mm:ss, or h:mm:ss when an hour or more is left
+function formatRemaining(minutesLeft) {
   const totalSeconds = Math.max(0, Math.ceil(minutesLeft * 60))
-  const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0')
+  const hours = Math.floor(totalSeconds / 3600)
+  const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0')
   const secs = String(totalSeconds % 60).padStart(2, '0')
 
-  return `${mins}:${secs}`
+  return hours > 0 ? `${hours}:${mins}:${secs}` : `${mins}:${secs}`
 }
 
 function formatHour(hour24) {
@@ -36,10 +27,16 @@ function formatHour(hour24) {
   }
 }
 
-function formatLabel(hour24) {
-  const { time, suffix } = formatHour(hour24)
+// minute of the day (0-1439) -> "10:14 AM"
+function formatMinuteLabel(minuteOfDay) {
+  const total =
+    ((Math.round(minuteOfDay) % DAY_MINUTES) + DAY_MINUTES) % DAY_MINUTES
+  const hour24 = Math.floor(total / 60)
+  const minute = total % 60
+  const suffix = hour24 < 12 ? 'AM' : 'PM'
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
 
-  return `${time} ${suffix}`
+  return `${String(hour12).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${suffix}`
 }
 
 function formatTimeValue(value) {
@@ -53,40 +50,52 @@ function formatTimeValue(value) {
   )} ${suffix}`
 }
 
-function toTimeValue(hour) {
-  return `${String(hour).padStart(2, '0')}:00`
+// minute of the day -> "HH:MM" (the format a time input uses)
+function toTimeValue(minuteOfDay) {
+  const total = ((minuteOfDay % DAY_MINUTES) + DAY_MINUTES) % DAY_MINUTES
+  const hour = Math.floor(total / 60)
+  const minute = total % 60
+
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
 
-function defaultEndHour(startHour, endHour) {
-  if (endHour <= startHour) return (startHour + 1) % 24
+function defaultEndMinutes(startMin, endMin) {
+  if (endMin <= startMin) return (startMin + 60) % DAY_MINUTES
 
-  return Math.min(startHour + 1, endHour)
+  return Math.min(startMin + 60, endMin)
 }
 
 function HourlyTimeline({ config }) {
-  const startHour = config?.startHour ?? 9
-  const endHour = config?.endHour ?? 19
-  const blockCount = Math.max(1, config?.blockCount ?? 10)
+  // Start and end chosen in the Create/Update Sprint modal
+  const startMin = (config?.startHour ?? 9) * 60 + (config?.startMinute ?? 0)
+  const endMin = (config?.endHour ?? 19) * 60 + (config?.endMinute ?? 0)
+  const blockCount = Math.max(1, Number(config?.blockCount) || 10)
   const theme = config?.theme ?? '#52d696'
 
-  const [minutes, setMinutes] = useState(getMinutesNow)
+  // The countdown starts when the sprint was saved
+  const [mountedAt] = useState(() => Date.now())
+  const startedAt = config?.startedAt ?? mountedAt
+
+  const [nowMs, setNowMs] = useState(() => Date.now())
   const [todosOpen, setTodosOpen] = useState(false)
   const [todos, setTodos] = useState([])
   const [draft, setDraft] = useState('')
-  const [draftStart, setDraftStart] = useState(toTimeValue(startHour))
+  const [draftStart, setDraftStart] = useState(toTimeValue(startMin))
   const [draftEnd, setDraftEnd] = useState(() =>
-    toTimeValue(defaultEndHour(startHour, endHour)),
+    toTimeValue(defaultEndMinutes(startMin, endMin)),
   )
-  const [window, setWindow] = useState({ startHour, endHour })
+  const [range, setRange] = useState({ startMin, endMin })
 
-  if (window.startHour !== startHour || window.endHour !== endHour) {
-    setWindow({ startHour, endHour })
-    setDraftStart(toTimeValue(startHour))
-    setDraftEnd(toTimeValue(defaultEndHour(startHour, endHour)))
+  // When a new sprint time is chosen, reset the task time fields to match
+  if (range.startMin !== startMin || range.endMin !== endMin) {
+    setRange({ startMin, endMin })
+    setDraftStart(toTimeValue(startMin))
+    setDraftEnd(toTimeValue(defaultEndMinutes(startMin, endMin)))
   }
 
-  const timesValid =
-    draftStart && draftEnd && (endHour <= startHour || draftStart < draftEnd)
+  const wraps = endMin <= startMin
+
+  const timesValid = draftStart && draftEnd && (wraps || draftStart < draftEnd)
 
   function addTodo(event) {
     event.preventDefault()
@@ -119,7 +128,7 @@ function HourlyTimeline({ config }) {
 
     function tick(time) {
       if (time - lastPaint >= 100) {
-        setMinutes(getMinutesNow())
+        setNowMs(Date.now())
         lastPaint = time
       }
 
@@ -127,7 +136,7 @@ function HourlyTimeline({ config }) {
     }
 
     function refresh() {
-      setMinutes(getMinutesNow())
+      setNowMs(Date.now())
     }
 
     frameId = requestAnimationFrame(tick)
@@ -139,31 +148,31 @@ function HourlyTimeline({ config }) {
     }
   }, [])
 
-  let totalHours = ((endHour - startHour) + 24) % 24
+  // Length of the sprint in minutes (end time minus start time)
+  let span = (endMin - startMin + DAY_MINUTES) % DAY_MINUTES
 
-  if (totalHours === 0) totalHours = 24
+  if (span === 0) span = DAY_MINUTES
 
-  const startMinutes = startHour * 60
-  const span = totalHours * 60
-  const wraps = endHour <= startHour
+  // Minutes since the sprint was saved (the stopwatch)
+  const elapsed = Math.max(0, (nowMs - startedAt) / 60000)
 
-  const elapsed = wraps
-    ? ((minutes - startMinutes) % DAY_MINUTES + DAY_MINUTES) % DAY_MINUTES
-    : minutes - startMinutes
-
-  const inRange = elapsed >= 0 && elapsed < span
+  const finished = elapsed >= span
+  const inRange = !finished
+  const remainingMinutes = Math.max(0, span - elapsed)
   const nowPercent = inRange ? (elapsed / span) * 100 : 0
-  const current = formatHour(Math.floor(minutes / 60) % 24)
+  const currentHour = new Date(nowMs).getHours()
+  const current = formatHour(currentHour)
 
   const blockSpan = span / blockCount
 
+  // Every block starts full and drains as time passes
   const blocks = Array.from({ length: blockCount }, (_, index) => {
-    const progress = Math.min(
+    const used = Math.min(
       1,
       Math.max(0, (elapsed - index * blockSpan) / blockSpan),
     )
 
-    return { index, progress }
+    return { index, remaining: 1 - used }
   })
 
   let countdown = null
@@ -178,97 +187,118 @@ function HourlyTimeline({ config }) {
 
     if (remaining <= COUNTDOWN_MINUTES) {
       countdown = {
-        text: formatCountdown(remaining),
+        text: formatRemaining(remaining),
         critical: remaining <= COUNTDOWN_CRITICAL_MINUTES,
       }
     }
   }
 
-  const ticks = Array.from({ length: totalHours - 1 }, (_, index) => {
-    const hour = (startHour + index + 1) % 24
+  // Tick marks at every whole hour inside the chosen window
+  const ticks = []
 
-    return { hour, left: ((index + 1) / totalHours) * 100 }
-  })
+  for (let offset = 1; offset < span; offset += 1) {
+    const absolute = (startMin + offset) % DAY_MINUTES
+
+    if (absolute % 60 === 0) {
+      ticks.push({
+        hour: absolute / 60,
+        left: (offset / span) * 100,
+      })
+    }
+  }
 
   return (
     <div className={`timeline-shell${todosOpen ? ' timeline-shell--open' : ''}`}>
       <section className="hourly-timeline" aria-label="Hourly timeline">
-      <span className="hourly-timeline__edge hourly-timeline__edge--start">
-        {formatLabel(startHour)}
-      </span>
+        <span className="hourly-timeline__edge hourly-timeline__edge--start">
+          {formatMinuteLabel(startMin)}
+        </span>
 
-      <div className="hourly-timeline__axis">
-        <div className="hourly-timeline__line" />
+        <div className="hourly-timeline__axis">
+          <div className="hourly-timeline__line" />
 
-        {inRange && (
-          <button
-            type="button"
-            className="hourly-timeline__now"
-            style={{ left: `${nowPercent}%` }}
-            onClick={() => setTodosOpen((open) => !open)}
-            aria-label={`Current time ${current.time} ${current.suffix} — open to-do list`}
-            aria-expanded={todosOpen}
-          >
-            <span className="hourly-timeline__now-plus" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path
-                  d="M12 5v14M5 12h14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-              </svg>
+          {inRange && (
+            <button
+              type="button"
+              className="hourly-timeline__now"
+              style={{ left: `${nowPercent}%` }}
+              onClick={() => setTodosOpen((open) => !open)}
+              aria-label={`Current time ${current.time} ${current.suffix} — open to-do list`}
+              aria-expanded={todosOpen}
+            >
+              <span className="hourly-timeline__now-plus" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 5v14M5 12h14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            </button>
+          )}
+
+          {ticks.map(({ hour, left }) => (
+            <span
+              key={hour}
+              className="hourly-timeline__tick"
+              style={{ left: `${left}%` }}
+            >
+              <span className="hourly-timeline__tick-label">
+                {formatHour(hour).time}
+              </span>
             </span>
-          </button>
-        )}
+          ))}
+        </div>
 
-        {ticks.map(({ hour, left }) => (
-          <span
-            key={hour}
-            className="hourly-timeline__tick"
-            style={{ left: `${left}%` }}
-          >
-            <span className="hourly-timeline__tick-label">
-              {formatHour(hour).time}
+        <span className="hourly-timeline__edge hourly-timeline__edge--end">
+          {countdown && (
+            <span
+              className={`hourly-timeline__countdown${
+                countdown.critical ? ' hourly-timeline__countdown--critical' : ''
+              }`}
+              role="timer"
+              aria-label={`${countdown.text} left in this block`}
+            >
+              {countdown.text}
             </span>
-          </span>
-        ))}
-      </div>
+          )}
 
-      <span className="hourly-timeline__edge hourly-timeline__edge--end">
-        {countdown && (
+          {formatMinuteLabel(endMin)}
+        </span>
+
+             <div className="hourly-timeline__grid">
+          {blocks.map(({ index, remaining }) => (
+            <div
+              key={index}
+              className="hourly-timeline__block hourly-timeline__block--drain"
+            >
+              <span
+                className="hourly-timeline__fill"
+                style={{
+                  background: theme,
+                  // cuts the colour away from the TOP, so the edge moves down
+                  clipPath: `inset(${(1 - remaining) * 100}% 0 0 0)`,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="hourly-timeline__status">
+          <CafePicker />
+
           <span
-            className={`hourly-timeline__countdown${
-              countdown.critical ? ' hourly-timeline__countdown--critical' : ''
-            }`}
+            className="hourly-timeline__remaining"
             role="timer"
-            aria-label={`${countdown.text} left in this block`}
+            aria-label="Time left in this sprint"
           >
-            {countdown.text}
+            {finished ? 'Done' : formatRemaining(remainingMinutes)}
           </span>
-        )}
-
-        {formatLabel(endHour)}
-      </span>
-
-      <div className="hourly-timeline__grid">
-        {blocks.map(({ index, progress }) => (
-          <div
-            key={index}
-            className="hourly-timeline__block"
-            style={{
-              '--block-color': theme,
-              '--block-progress': progress,
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="hourly-timeline__status">
-        <CafePicker />
-      </div>
-    </section>
+        </div>
+      </section>
 
       {todos.length > 0 && (
         <aside className="timeline-tasks" aria-label="Scheduled tasks">
@@ -320,8 +350,8 @@ function HourlyTimeline({ config }) {
                 className="todo-panel__time"
                 type="time"
                 step="60"
-                min={toTimeValue(startHour)}
-                max={endHour <= startHour ? undefined : toTimeValue(endHour)}
+                min={toTimeValue(startMin)}
+                max={wraps ? undefined : toTimeValue(endMin)}
                 value={draftStart}
                 onChange={(event) => setDraftStart(event.target.value)}
                 aria-label="Task start time"
@@ -333,8 +363,8 @@ function HourlyTimeline({ config }) {
                 className="todo-panel__time"
                 type="time"
                 step="60"
-                min={toTimeValue(startHour)}
-                max={endHour <= startHour ? undefined : toTimeValue(endHour)}
+                min={toTimeValue(startMin)}
+                max={wraps ? undefined : toTimeValue(endMin)}
                 value={draftEnd}
                 onChange={(event) => setDraftEnd(event.target.value)}
                 aria-label="Task end time"
