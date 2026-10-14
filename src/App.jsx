@@ -32,6 +32,20 @@ const DEFAULT_SPRINT = {
 // Where the visitor's chosen times are saved in their browser
 const SPRINT_STORAGE_KEY = 'focus-timer.sprint-config'
 
+// Where the visitor's tasks are saved in their browser
+const TODOS_STORAGE_KEY = 'focus-timer.todos'
+
+// Returns the saved tasks, or an empty list for a first-time visitor
+function readSavedTodos() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TODOS_STORAGE_KEY))
+
+    return Array.isArray(saved) ? saved : []
+  } catch {
+    return []
+  }
+}
+
 // Returns the saved sprint settings, or null for a first-time visitor
 function readSavedSprint() {
   try {
@@ -83,11 +97,20 @@ function App() {
   const [sprintConfig, setSprintConfig] = useState(
     () => readSavedSprint() ?? DEFAULT_SPRINT,
   )
-  const [todos, setTodos] = useState([])
+  const [todos, setTodos] = useState(readSavedTodos)
   const [todosOpen, setTodosOpen] = useState(false)
   const [sprintEnded, setSprintEnded] = useState(false)
 
   const endTime = useRef(null)
+
+  // keep the tasks in the browser so a refresh doesn't lose them
+  useEffect(() => {
+    try {
+      localStorage.setItem(TODOS_STORAGE_KEY, JSON.stringify(todos))
+    } catch {
+      // storage unavailable, the tasks just won't be remembered
+    }
+  }, [todos])
 
   useEffect(() => {
     const root = document.documentElement
