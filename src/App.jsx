@@ -12,6 +12,7 @@ import {
   readInviteTeam,
 } from './useTeamRoom'
 import { getSprintLink, readSharedSprint } from './sprintShare'
+import { readStored, writeStored } from './storage'
 import { requestNotificationPermission, unlockBlockAudio } from './blockAlerts'
 
 const labels = {
@@ -44,32 +45,29 @@ const TODOS_STORAGE_KEY = 'focus-timer.todos'
 
 // Returns the saved tasks, or an empty list for a first-time visitor
 function readSavedTodos() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(TODOS_STORAGE_KEY))
+  const saved = readStored(TODOS_STORAGE_KEY, [])
 
-    return Array.isArray(saved) ? saved : []
-  } catch {
-    return []
-  }
+  return Array.isArray(saved) ? saved : []
 }
 
 // Returns the saved sprint settings, or null for a first-time visitor
 function readSavedSprint() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(SPRINT_STORAGE_KEY))
+  const saved = readStored(SPRINT_STORAGE_KEY)
 
-    if (
-      !saved ||
-      !Number.isInteger(saved.startHour) ||
-      !Number.isInteger(saved.endHour)
-    ) {
-      return null
-    }
-
-    return { ...DEFAULT_SPRINT, ...saved }
-  } catch {
+  if (
+    !saved ||
+    !Number.isInteger(saved.startHour) ||
+    !Number.isInteger(saved.endHour)
+  ) {
     return null
   }
+
+  return { ...DEFAULT_SPRINT, ...saved }
+}
+
+// Remembers the sprint settings for the next visit
+function saveSprintConfig(config) {
+  writeStored(SPRINT_STORAGE_KEY, config)
 }
 
 function isSprintActive(sprint) {
@@ -123,13 +121,7 @@ function App() {
 
   // Persist a sprint opened from a link so a refresh keeps it
   useEffect(() => {
-    if (!sharedSprint) return
-
-    try {
-      localStorage.setItem(SPRINT_STORAGE_KEY, JSON.stringify(sharedSprint))
-    } catch {
-      // storage unavailable, the sprint just won't be remembered
-    }
+    if (sharedSprint) saveSprintConfig(sharedSprint)
   }, [sharedSprint])
 
   // Drop the share params from the address bar once they've been handled
@@ -178,13 +170,7 @@ function App() {
 
   // keep the tasks in the browser so a refresh doesn't lose them
   useEffect(() => {
-    if (inTeam) return
-
-    try {
-      localStorage.setItem(TODOS_STORAGE_KEY, JSON.stringify(localTodos))
-    } catch {
-      // storage unavailable, the tasks just won't be remembered
-    }
+    if (!inTeam) writeStored(TODOS_STORAGE_KEY, localTodos)
   }, [localTodos, inTeam])
 
   useEffect(() => {
@@ -296,7 +282,7 @@ function App() {
     setIsModalOpen(false)
   }
 
-   // Saves the chosen settings; the timeline then follows the chosen clock times
+  // Saves the chosen settings; the timeline then follows the chosen clock times
   function confirmSprint(form) {
     requestNotificationPermission()
 
@@ -311,11 +297,7 @@ function App() {
         pendingConfigRef.current = next
       }
     } else {
-      try {
-        localStorage.setItem(SPRINT_STORAGE_KEY, JSON.stringify(next))
-      } catch {
-        // storage unavailable, the settings just won't be remembered
-      }
+      saveSprintConfig(next)
     }
 
     setIsModalOpen(false)
@@ -344,15 +326,10 @@ function App() {
     }
 
     if (inTeam) {
-      collab.setConfig(next)
+      setTeamConfig(next)
     } else {
       setLocalSprintConfig(next)
-
-      try {
-        localStorage.setItem(SPRINT_STORAGE_KEY, JSON.stringify(next))
-      } catch {
-        // storage unavailable, the settings just won't be remembered
-      }
+      saveSprintConfig(next)
     }
 
     setSprintEnded(false)

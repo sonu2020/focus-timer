@@ -1,35 +1,12 @@
 import { useState } from 'react'
+import { DAY_MINUTES, parseTime, toTimeValue } from './time'
 import './SprintCompleteModal.css'
-
-const DAY_MINUTES = 1440
 
 const PRESETS = [
   { label: '+15 min', minutes: 15 },
   { label: '+30 min', minutes: 30 },
   { label: '+1 hour', minutes: 60 },
 ]
-
-// minute of the day -> "HH:MM" (the format a time input uses)
-function toTimeValue(minuteOfDay) {
-  const total = ((minuteOfDay % DAY_MINUTES) + DAY_MINUTES) % DAY_MINUTES
-  const hour = Math.floor(total / 60)
-  const minute = total % 60
-
-  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
-}
-
-// "10:14" -> { hour: 10, minute: 14 }, or null while the field is empty
-function parseTime(value) {
-  if (!value) return null
-
-  const [h, m] = String(value).split(':')
-  const hour = Number.parseInt(h, 10)
-  const minute = Number.parseInt(m, 10)
-
-  if (Number.isNaN(hour) || Number.isNaN(minute)) return null
-
-  return { hour, minute }
-}
 
 function SprintCompleteModal({ onDone, onExtend, config }) {
   const endMin = (config?.endHour ?? 19) * 60 + (config?.endMinute ?? 0)

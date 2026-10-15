@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { readStored, removeStored, writeStored } from './storage'
 
 // Where this visitor's team identity is saved in their browser
 const IDENTITY_STORAGE_KEY = 'focus-timer.identity'
@@ -12,29 +13,16 @@ function teamCacheKey(teamId) {
 function readTeamCache(teamId) {
   if (!teamId) return null
 
-  try {
-    const raw = localStorage.getItem(teamCacheKey(teamId))
-    if (!raw) return null
+  const cached = readStored(teamCacheKey(teamId))
 
-    const parsed = JSON.parse(raw)
-    return parsed && typeof parsed === 'object' ? parsed : null
-  } catch {
-    return null
-  }
+  return cached && typeof cached === 'object' ? cached : null
 }
 
 function writeTeamCache(teamId, patch) {
   if (!teamId) return
 
-  try {
-    const current = readTeamCache(teamId) ?? {}
-    localStorage.setItem(
-      teamCacheKey(teamId),
-      JSON.stringify({ ...current, ...patch }),
-    )
-  } catch {
-    // storage unavailable, the room state just won't be cached
-  }
+  const current = readTeamCache(teamId) ?? {}
+  writeStored(teamCacheKey(teamId), { ...current, ...patch })
 }
 
 // A short, random team id used when someone taps "New"
@@ -44,36 +32,24 @@ export function generateTeamId() {
 
 // Returns the saved identity, or null for a solo visitor
 export function readIdentity() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(IDENTITY_STORAGE_KEY))
+  const saved = readStored(IDENTITY_STORAGE_KEY)
 
-    if (!saved || typeof saved.teamId !== 'string' || !saved.teamId.trim()) {
-      return null
-    }
-
-    return {
-      email: typeof saved.email === 'string' ? saved.email.trim() : '',
-      teamId: saved.teamId.trim(),
-    }
-  } catch {
+  if (!saved || typeof saved.teamId !== 'string' || !saved.teamId.trim()) {
     return null
+  }
+
+  return {
+    email: typeof saved.email === 'string' ? saved.email.trim() : '',
+    teamId: saved.teamId.trim(),
   }
 }
 
 export function saveIdentity(identity) {
-  try {
-    localStorage.setItem(IDENTITY_STORAGE_KEY, JSON.stringify(identity))
-  } catch {
-    // storage unavailable, the identity just won't be remembered
-  }
+  writeStored(IDENTITY_STORAGE_KEY, identity)
 }
 
 export function clearIdentity() {
-  try {
-    localStorage.removeItem(IDENTITY_STORAGE_KEY)
-  } catch {
-    // storage unavailable, nothing to clear
-  }
+  removeStored(IDENTITY_STORAGE_KEY)
 }
 
 // The shareable link that drops a teammate straight into this team

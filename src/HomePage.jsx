@@ -1,12 +1,8 @@
+import { formatToday } from './time'
 import './HomePage.css'
 
 function HomePage({ onStart }) {
-  const today = new Date()
-  const day = today.toLocaleDateString('en-US', { weekday: 'long' })
-  const monthYear = today.toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-  })
+  const { day, monthYear } = formatToday()
 
   return (
     <section className="home">

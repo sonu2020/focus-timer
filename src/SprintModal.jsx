@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { minutesOfDay, parseTime, toTimeValue } from './time'
 import './SprintModal.css'
 
 const BLOCK_PRESETS = [3, 5, 10]
@@ -16,22 +17,9 @@ const THEMES = [
   { name: 'Pink', value: '#ec4899', border: '#be185d' },
 ]
 
-// (9, 0) -> "09:00"  (the format a time input uses)
-function toTimeValue(hour24, minute = 0) {
-  return `${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
-}
-
-// "10:14" -> { hour: 10, minute: 14 }, or null while the field is empty/incomplete
-function parseTime(value) {
-  if (!value) return null
-
-  const [h, m] = String(value).split(':')
-  const hour = Number.parseInt(h, 10)
-  const minute = Number.parseInt(m, 10)
-
-  if (Number.isNaN(hour) || Number.isNaN(minute)) return null
-
-  return { hour, minute }
+// An obvious typo shouldn't silently drop the invite
+function isEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
 function Caret() {
@@ -62,10 +50,12 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
   const isUpdate = mode === 'update'
 
   const [startTime, setStartTime] = useState(
-    initial?.startTime ?? toTimeValue(initial?.startHour ?? 9, initial?.startMinute ?? 0),
+    initial?.startTime ??
+      toTimeValue(minutesOfDay(initial?.startHour ?? 9, initial?.startMinute ?? 0)),
   )
   const [endTime, setEndTime] = useState(
-    initial?.endTime ?? toTimeValue(initial?.endHour ?? 19, initial?.endMinute ?? 0),
+    initial?.endTime ??
+      toTimeValue(minutesOfDay(initial?.endHour ?? 19, initial?.endMinute ?? 0)),
   )
   const [error, setError] = useState('')
   const [length, setLength] = useState(initial?.length ?? '10')
@@ -100,8 +90,6 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
     }
   }
 
-  const shareLink = invite ? onGetInviteLink(currentConfig()) : ''
-
   useEffect(() => {
     if (!open) return
 
@@ -123,13 +111,9 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
     setError('')
   }
 
-  // A simple shape check so an obvious typo doesn't silently drop the invite
-  function isEmail(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-  }
-
   // Opens the creator's mail client with the sprint link ready to send
   function emailInvite(to) {
+    const shareLink = onGetInviteLink(currentConfig())
     const subject = 'Join my focus sprint'
     const body = `I set up a focus sprint. Open this link to load the same setup:\n\n${shareLink}`
     const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(

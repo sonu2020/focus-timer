@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import './HourlyTimeline.css'
+import { DAY_MINUTES, toTimeValue, wrapDayMinutes } from './time'
 import { notifyBlockEnd } from './blockAlerts'
 import CafePicker from './CafePicker'
-
-const DAY_MINUTES = 1440
 
 const COUNTDOWN_MINUTES = 5
 const COUNTDOWN_CRITICAL_MINUTES = 2.5
@@ -18,52 +17,123 @@ function formatRemaining(minutesLeft) {
   return hours > 0 ? `${hours}:${mins}:${secs}` : `${mins}:${secs}`
 }
 
+// 24-hour clock -> 12-hour parts, e.g. 0 -> { hour: 12, suffix: 'AM' }
+function to12Hour(hour24) {
+  return {
+    hour: hour24 % 12 === 0 ? 12 : hour24 % 12,
+    suffix: hour24 < 12 ? 'AM' : 'PM',
+  }
+}
+
 function formatHour(hour24) {
-  const suffix = hour24 < 12 ? 'AM' : 'PM'
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
+  const { hour, suffix } = to12Hour(hour24)
 
   return {
-    time: `${String(hour12).padStart(2, '0')}:00`,
+    time: `${String(hour).padStart(2, '0')}:00`,
     suffix,
   }
 }
 
 // minute of the day (0-1439) -> "10:14 AM"
 function formatMinuteLabel(minuteOfDay) {
-  const total =
-    ((Math.round(minuteOfDay) % DAY_MINUTES) + DAY_MINUTES) % DAY_MINUTES
-  const hour24 = Math.floor(total / 60)
+  const total = wrapDayMinutes(Math.round(minuteOfDay))
+  const { hour, suffix } = to12Hour(Math.floor(total / 60))
   const minute = total % 60
-  const suffix = hour24 < 12 ? 'AM' : 'PM'
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
 
-  return `${String(hour12).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${suffix}`
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${suffix}`
 }
 
 function formatTimeValue(value) {
-  const [hour, minute] = value.split(':').map(Number)
-  const suffix = hour < 12 ? 'AM' : 'PM'
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12
+  const [hour24, minute] = value.split(':').map(Number)
+  const { hour, suffix } = to12Hour(hour24)
 
-  return `${String(hour12).padStart(2, '0')}:${String(minute).padStart(
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(
     2,
     '0',
   )} ${suffix}`
-}
-
-// minute of the day -> "HH:MM" (the format a time input uses)
-function toTimeValue(minuteOfDay) {
-  const total = ((minuteOfDay % DAY_MINUTES) + DAY_MINUTES) % DAY_MINUTES
-  const hour = Math.floor(total / 60)
-  const minute = total % 60
-
-  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
 
 function defaultEndMinutes(startMin, endMin) {
   if (endMin <= startMin) return (startMin + 60) % DAY_MINUTES
 
   return Math.min(startMin + 60, endMin)
+}
+
+// Everything the timeline needs to draw itself, derived purely from the clock.
+// `nowMin` is the current minute of the day (including a fractional part).
+function getTimelineState({ nowMin, startMin, endMin, blockCount }) {
+  const wraps = endMin <= startMin
+
+  // Length of the sprint in minutes (end time minus start time)
+  let span = (endMin - startMin + DAY_MINUTES) % DAY_MINUTES
+  if (span === 0) span = DAY_MINUTES
+
+  // The sprint runs between its start and end clock times, not from the click
+  const started = wraps
+    ? nowMin >= startMin || nowMin < endMin
+    : nowMin >= startMin
+  const finished = wraps
+    ? nowMin >= endMin && nowMin < startMin
+    : nowMin >= endMin
+  const inRange = started && !finished
+
+  // Minutes since the start time (kept inside the sprint window)
+  let elapsed = 0
+  if (inRange) {
+    elapsed = nowMin - startMin
+    if (elapsed < 0) elapsed += DAY_MINUTES
+  }
+
+  const remainingMinutes = inRange ? Math.max(0, span - elapsed) : span
+  const nowPercent = inRange ? (elapsed / span) * 100 : 0
+  const blockSpan = span / blockCount
+
+  // Every block starts full and drains as time passes
+  const blocks = Array.from({ length: blockCount }, (_, index) => {
+    const used = Math.min(
+      1,
+      Math.max(0, (elapsed - index * blockSpan) / blockSpan),
+    )
+
+    return { index, remaining: 1 - used }
+  })
+
+  const activeIndex = inRange
+    ? Math.min(blockCount - 1, Math.floor(elapsed / blockSpan))
+    : null
+
+  let countdown = null
+  if (activeIndex !== null) {
+    const remaining = (activeIndex + 1) * blockSpan - elapsed
+
+    if (remaining <= COUNTDOWN_MINUTES) {
+      countdown = {
+        text: formatRemaining(remaining),
+        critical: remaining <= COUNTDOWN_CRITICAL_MINUTES,
+      }
+    }
+  }
+
+  // Tick marks at every whole hour inside the chosen window
+  const ticks = []
+  for (let offset = 1; offset < span; offset += 1) {
+    const absolute = (startMin + offset) % DAY_MINUTES
+
+    if (absolute % 60 === 0) {
+      ticks.push({ hour: absolute / 60, left: (offset / span) * 100 })
+    }
+  }
+
+  return {
+    finished,
+    inRange,
+    remainingMinutes,
+    nowPercent,
+    blocks,
+    activeIndex,
+    countdown,
+    ticks,
+  }
 }
 
 function HourlyTimeline({
@@ -153,82 +223,23 @@ function HourlyTimeline({
     }
   }, [])
 
-  // Length of the sprint in minutes (end time minus start time)
-  let span = (endMin - startMin + DAY_MINUTES) % DAY_MINUTES
-
-  if (span === 0) span = DAY_MINUTES
-
   // Minute of the day right now (with seconds), so the timeline follows the clock
   const nowDate = new Date(nowMs)
   const nowMin =
     nowDate.getHours() * 60 + nowDate.getMinutes() + nowDate.getSeconds() / 60
 
-  // The sprint runs between its start and end clock times, not from the click
-  const started = wraps
-    ? nowMin >= startMin || nowMin < endMin
-    : nowMin >= startMin
-  const finished = wraps
-    ? nowMin >= endMin && nowMin < startMin
-    : nowMin >= endMin
-  const inRange = started && !finished
+  const {
+    finished,
+    inRange,
+    remainingMinutes,
+    nowPercent,
+    blocks,
+    activeIndex,
+    countdown,
+    ticks,
+  } = getTimelineState({ nowMin, startMin, endMin, blockCount })
 
-  // Minutes since the start time (kept inside the sprint window)
-  let elapsed = 0
-
-  if (inRange) {
-    elapsed = nowMin - startMin
-    if (elapsed < 0) elapsed += DAY_MINUTES
-  }
-
-  const remainingMinutes = inRange ? Math.max(0, span - elapsed) : span
-  const nowPercent = inRange ? (elapsed / span) * 100 : 0
   const current = formatHour(nowDate.getHours())
-
-  const sprintEnded = finished
-
-  const blockSpan = span / blockCount
-
-  // Every block starts full and drains as time passes
-  const blocks = Array.from({ length: blockCount }, (_, index) => {
-    const used = Math.min(
-      1,
-      Math.max(0, (elapsed - index * blockSpan) / blockSpan),
-    )
-
-    return { index, remaining: 1 - used }
-  })
-
-  const activeIndex = inRange
-    ? Math.min(blockCount - 1, Math.floor(elapsed / blockSpan))
-    : null
-
-  let countdown = null
-
-  if (activeIndex !== null) {
-    const blockEnd = (activeIndex + 1) * blockSpan
-    const remaining = blockEnd - elapsed
-
-    if (remaining <= COUNTDOWN_MINUTES) {
-      countdown = {
-        text: formatRemaining(remaining),
-        critical: remaining <= COUNTDOWN_CRITICAL_MINUTES,
-      }
-    }
-  }
-
-  // Tick marks at every whole hour inside the chosen window
-  const ticks = []
-
-  for (let offset = 1; offset < span; offset += 1) {
-    const absolute = (startMin + offset) % DAY_MINUTES
-
-    if (absolute % 60 === 0) {
-      ticks.push({
-        hour: absolute / 60,
-        left: (offset / span) * 100,
-      })
-    }
-  }
 
   useEffect(() => {
     onSprintEndRef.current = onSprintEnd
@@ -249,8 +260,8 @@ function HourlyTimeline({
   }, [activeIndex])
 
   useEffect(() => {
-    if (sprintEnded) onSprintEndRef.current?.()
-  }, [sprintEnded])
+    if (finished) onSprintEndRef.current?.()
+  }, [finished])
 
   return (
     <div className={`timeline-shell${todosOpen ? ' timeline-shell--open' : ''}`}>
@@ -302,7 +313,7 @@ function HourlyTimeline({
           {formatMinuteLabel(endMin)}
         </span>
 
-             <div className="hourly-timeline__grid">
+        <div className="hourly-timeline__grid">
           {blocks.map(({ index, remaining }) => (
             <div
               key={index}
