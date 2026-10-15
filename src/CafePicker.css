@@ -34,54 +34,62 @@
   background: rgba(0, 0, 0, 0.58);
 }
 
-/* ---------- Black pill (365 x 50) ---------- */
+/* ---------- Black pill (same style as the Update Sprint button) ---------- */
 .cafe-player__pill {
   display: flex;
   align-items: center;
+  gap: 14px;
   box-sizing: border-box;
-  width: calc(365 * var(--u));
+  width: 280px;
   max-width: calc(100vw - 32px);
-  height: calc(50 * var(--u));
-  padding: 0 calc(24 * var(--u)) 0 calc(26 * var(--u));
+  height: 46px;
+  padding: 10px 20px;
   border: 0;
-  border-radius: calc(6 * var(--u));
-  background: #000;
-  color: #fff;
+  border-radius: 8px;
+  background-color: #000000;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 16px;
+  transition: opacity 0.2s ease;
+}
+
+.cafe-player__pill:hover {
+  opacity: 0.9;
 }
 
 .cafe-player__pill-icon {
   display: grid;
   place-items: center;
-  width: calc(29 * var(--u));
-  height: calc(29 * var(--u));
-  border-radius: calc(6 * var(--u));
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
   background: #fff;
   color: #000;
-  flex-shrink: 0;
 }
 
 .cafe-player__pill-icon svg {
-  width: calc(19 * var(--u));
-  height: calc(19 * var(--u));
+  width: 16px;
+  height: 16px;
 }
 
 .cafe-player__pill-text {
   flex: 1;
   min-width: 0;
-  padding-left: calc(51 * var(--u));
+  padding: 0;
   text-align: left;
-  font-size: calc(17 * var(--u));
+  font-size: 16px;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .cafe-player__pill-caret {
-  width: calc(20 * var(--u));
-  height: calc(20 * var(--u));
   flex-shrink: 0;
+  width: 20px;
+  height: 20px;
 }
-
 /* ---------- White card (580 wide, fixed above the pill) ---------- */
 .cafe-player__card {
   --u: 0.6px; /* card size only: was 0.72px */
