@@ -339,7 +339,8 @@ function HourlyTimeline({
             role="timer"
             aria-label="Time left in this sprint"
           >
-            {finished ? 'Done' : formatRemaining(remainingMinutes)}
+            {/* CHANGED: no more "Done" text, it stays at 00:00 when finished */}
+            {formatRemaining(remainingMinutes)}
           </span>
         </div>
       </section>
