@@ -74,9 +74,9 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
   )
   const [theme, setTheme] = useState(initial?.themeName ?? 'Green')
 
-  // Optional invite: share a link that recreates this sprint
+  // Optional invite: email a link that recreates this sprint to a teammate
   const [invite, setInvite] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
 
   const blockCount = length === 'Customize' ? customBlocks : Number(length)
 
@@ -123,6 +123,24 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
     setError('')
   }
 
+  // A simple shape check so an obvious typo doesn't silently drop the invite
+  function isEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  }
+
+  // Opens the creator's mail client with the sprint link ready to send
+  function emailInvite(to) {
+    const subject = 'Join my focus sprint'
+    const body = `I set up a focus sprint. Open this link to load the same setup:\n\n${shareLink}`
+    const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(
+      subject,
+    )}&body=${encodeURIComponent(body)}`
+
+    const link = document.createElement('a')
+    link.href = mailto
+    link.click()
+  }
+
   function handleStart() {
     const start = parseTime(startTime)
     const end = parseTime(endTime)
@@ -137,22 +155,28 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
       return
     }
 
+    if (invite) {
+      const to = inviteEmail.trim()
+
+      if (!isEmail(to)) {
+        setError("Enter your teammate's email to send the invite.")
+        return
+      }
+
+      emailInvite(to)
+    }
+
     onStart(currentConfig())
   }
 
   function toggleInvite(checked) {
     setInvite(checked)
-    setCopied(false)
+    setError('')
   }
 
-  async function copyInviteLink() {
-    try {
-      await navigator.clipboard.writeText(shareLink)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // clipboard blocked; the link field stays selectable for manual copy
-    }
+  function changeInviteEmail(event) {
+    setInviteEmail(event.target.value)
+    setError('')
   }
 
   if (!open) return null
@@ -294,32 +318,23 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
               checked={invite}
               onChange={(event) => toggleInvite(event.target.checked)}
             />
-            <span>Share this sprint with a teammate (optional)</span>
+            <span>Invite a teammate to this sprint (optional)</span>
           </label>
 
           {invite && (
             <div className="sprint-modal__invite">
-              <div className="sprint-modal__invite-row">
-                <input
-                  className="sprint-modal__link"
-                  type="text"
-                  readOnly
-                  value={shareLink}
-                  onFocus={(event) => event.target.select()}
-                  aria-label="Share link"
-                />
-
-                <button
-                  type="button"
-                  className="sprint-modal__send"
-                  onClick={copyInviteLink}
-                >
-                  {copied ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
+              <input
+                className="sprint-modal__email"
+                type="email"
+                value={inviteEmail}
+                onChange={changeInviteEmail}
+                placeholder="teammate@example.com"
+                aria-label="Teammate's email"
+              />
 
               <p className="sprint-modal__invite-status">
-                Anyone who opens this link gets this sprint setup.
+                We'll open an email with this sprint's link to your teammate when
+                you start.
               </p>
             </div>
           )}
