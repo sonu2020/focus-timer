@@ -72,20 +72,6 @@ function saveSprintConfig(config) {
   writeStored(SPRINT_STORAGE_KEY, config)
 }
 
-function isSprintActive(sprint) {
-  if (!sprint) return false
-
-  const now = new Date()
-  const minutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60
-  const start = sprint.startHour * 60
-  const end = sprint.endHour * 60
-
-  if (end === start) return true
-  if (end > start) return minutes >= start && minutes < end
-
-  return minutes >= start || minutes < end
-}
-
 function App() {
   const [mode, setMode] = useState('pomodoro')
   const [secondsLeft, setSecondsLeft] = useState(25 * 60)
@@ -94,16 +80,17 @@ function App() {
   // A sprint carried in the URL (?sprint=...) opens straight away
   const [sharedSprint] = useState(readSharedSprint)
   const [incomingTeam] = useState(readInviteTeam)
-  // Resume the timeline only while the saved sprint is running;
-  // otherwise (no sprint, hasn't started yet, or already over) show the home page
-  const [viewMode, setViewMode] = useState(() =>
-    sharedSprint || isSprintActive(readSavedSprint()) ? 'timeline' : 'home',
-  )
+  // Like Excalidraw, a bare visit always lands on a fresh home page: a sprint
+  // saved in localStorage never picks the first view on its own. Only a
+  // shared link (or an explicit start) drops straight into the timeline.
+  const [viewMode, setViewMode] = useState(sharedSprint ? 'timeline' : 'home')
   const [scrollLocked, setScrollLocked] = useState(true)
   const [aboutVisible, setAboutVisible] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState('create')
-  // Start from a shared sprint, then the saved settings, then the defaults
+  // Settings used to prefill the sprint modal: the shared sprint, then the
+  // saved one, then the defaults. Reading these never starts a sprint—the view
+  // mode above stays on 'home' until the visitor explicitly starts one.
   const [localSprintConfig, setLocalSprintConfig] = useState(
     () => sharedSprint ?? readSavedSprint() ?? DEFAULT_SPRINT,
   )
@@ -341,6 +328,14 @@ function App() {
     const next = { ...DEFAULT_SPRINT, ...form }
     setLocalSprintConfig(next)
 
+    // A brand-new sprint starts with a clean task list
+    if (modalMode === 'create') {
+      setLocalTodos([])
+      writeStored(TODOS_STORAGE_KEY, [])
+
+      if (inTeam) setTeamTodos([])
+    }
+
     if (inTeam) {
       // Store the shared sprint right away; queue a resend if the socket is down
       setTeamConfig(next)
@@ -365,6 +360,9 @@ function App() {
   }
 
   function handleSprintDone() {
+    // Wrapping up clears the tasks so the next sprint starts fresh
+    setLocalTodos([])
+    writeStored(TODOS_STORAGE_KEY, [])
     setSprintEnded(false)
     setViewMode('home')
   }
