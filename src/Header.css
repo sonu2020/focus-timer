@@ -41,6 +41,54 @@
   color: #000000;
 }
 
+/* Live-collaboration indicator shown while a sprint room is shared */
+.app-header__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.app-header__live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9ca3af;
+}
+
+.app-header__live--online {
+  background: #e7f7ee;
+  color: #2e7d56;
+}
+
+.app-header__live--online .app-header__live-dot {
+  background: #2e7d56;
+}
+
+.app-header__live--connecting {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.app-header__live--connecting .app-header__live-dot {
+  background: #f59e0b;
+}
+
+.app-header__live--offline {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.app-header__live--offline .app-header__live-dot {
+  background: #ef4444;
+}
+
 /* Start a Sprint + music button, joined with no gap */
 .app-header__actions {
   display: flex;

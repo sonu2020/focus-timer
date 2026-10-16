@@ -16,15 +16,6 @@
       }
     ]
   },
-  "send_email": [
-    {
-      "name": "EMAIL"
-    }
-  ],
-  "vars": {
-    "INVITE_FROM_EMAIL": "invites@your-domain.com",
-    "INVITE_FROM_NAME": "Focus Timer"
-  },
   "migrations": [
     {
       "tag": "v1",

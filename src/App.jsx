@@ -10,6 +10,8 @@ import {
   readIdentity,
   saveIdentity,
   readInviteTeam,
+  generateTeamId,
+  writeTeamCache,
 } from './useTeamRoom'
 import { getSprintLink, readSharedSprint } from './sprintShare'
 import { readStored, writeStored } from './storage'
@@ -108,7 +110,7 @@ function App() {
   const [localTodos, setLocalTodos] = useState(readSavedTodos)
   const [todosOpen, setTodosOpen] = useState(false)
   const [sprintEnded, setSprintEnded] = useState(false)
-  const [identity] = useState(() => {
+  const [identity, setIdentity] = useState(() => {
     // A visitor arriving through a team invite link joins that team on first load
     const saved = readIdentity()
 
@@ -158,7 +160,14 @@ function App() {
   const endTime = useRef(null)
   // A sprint config waiting to be pushed to the team once the socket connects
   const pendingConfigRef = useRef(null)
-  const { status: teamStatus, setConfig: setTeamConfig } = collab
+  // Rooms this browser has already seeded, so we only push local tasks once
+  const seededRoomsRef = useRef(new Set())
+  const {
+    status: teamStatus,
+    hasState: teamHasState,
+    setConfig: setTeamConfig,
+    setTodos: setTeamTodos,
+  } = collab
 
   // Once the team socket is open, hand it the sprint the visitor just shared
   useEffect(() => {
@@ -167,6 +176,28 @@ function App() {
       pendingConfigRef.current = null
     }
   }, [inTeam, teamStatus, setTeamConfig])
+
+  // The creator's local tasks (and a joiner's, when the room is still empty)
+  // become the room's starting point so everyone sees them
+  useEffect(() => {
+    const teamId = identity?.teamId
+
+    if (!inTeam || !teamId || !teamHasState) return
+    if (seededRoomsRef.current.has(teamId)) return
+
+    seededRoomsRef.current.add(teamId)
+
+    if (collab.todos.length === 0 && localTodos.length > 0) {
+      setTeamTodos(localTodos)
+    }
+  }, [
+    inTeam,
+    identity?.teamId,
+    teamHasState,
+    collab.todos,
+    localTodos,
+    setTeamTodos,
+  ])
 
   // keep the tasks in the browser so a refresh doesn't lose them
   useEffect(() => {
@@ -282,6 +313,27 @@ function App() {
     setIsModalOpen(false)
   }
 
+  // Turns a solo visitor into a shared room the moment they offer to invite
+  // someone, so the link they copy carries a room everyone can join
+  function enableInvite() {
+    if (identity?.teamId) return identity.teamId
+
+    const teamId = generateTeamId()
+    const nextIdentity = { email: identity?.email ?? '', teamId }
+
+    // Seed the room's cache with the tasks and sprint we already have
+    writeTeamCache(teamId, { todos: localTodos, config: localSprintConfig })
+    saveIdentity(nextIdentity)
+    setIdentity(nextIdentity)
+
+    return teamId
+  }
+
+  // Builds the shareable link, tied to the shared room when there is one
+  function getShareLink(config) {
+    return getSprintLink(config, identity?.teamId)
+  }
+
   // Saves the chosen settings; the timeline then follows the chosen clock times
   function confirmSprint(form) {
     requestNotificationPermission()
@@ -359,6 +411,8 @@ function App() {
           todoOpen={todosOpen}
           todoCount={todos.filter((todo) => !todo.done).length}
           onToggleTodos={() => setTodosOpen((open) => !open)}
+          collaborating={inTeam}
+          teamStatus={teamStatus}
         />
       )}
 
@@ -499,7 +553,8 @@ function App() {
           initial={sprintConfig}
           onClose={closeModal}
           onStart={confirmSprint}
-          onGetInviteLink={getSprintLink}
+          onGetInviteLink={getShareLink}
+          onEnableInvite={enableInvite}
         />
       )}
 

@@ -18,7 +18,8 @@ function readTeamCache(teamId) {
   return cached && typeof cached === 'object' ? cached : null
 }
 
-function writeTeamCache(teamId, patch) {
+// Also exported so a visitor can seed a room before the socket connects
+export function writeTeamCache(teamId, patch) {
   if (!teamId) return
 
   const current = readTeamCache(teamId) ?? {}
@@ -66,26 +67,6 @@ export function readInviteTeam() {
   }
 }
 
-// Ask the backend to email an invite to a teammate
-export async function sendInvite({ teamId, to, fromEmail }) {
-  const response = await fetch(
-    `/api/teams/${encodeURIComponent(teamId)}/invite`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to, fromEmail }),
-    },
-  )
-
-  const data = await response.json().catch(() => ({}))
-
-  if (!response.ok) {
-    throw new Error(data.error || 'Could not send the invite.')
-  }
-
-  return data
-}
-
 // ws:// (or wss:// over https) endpoint for a team's live room
 function teamSocketUrl(teamId) {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -107,14 +88,37 @@ export function useTeamRoom({ teamId, email, enabled }) {
   )
   const [members, setMembers] = useState([])
   const [status, setStatus] = useState('idle')
+  // True once the room's state has arrived, so callers can tell "empty" apart
+  // from "not loaded yet"
+  const [hasState, setHasState] = useState(false)
 
   const socketRef = useRef(null)
   const todosRef = useRef(todos)
   const emailRef = useRef(email)
+  const [prevTeamId, setPrevTeamId] = useState(teamId)
+
+  // Keep the ref in step with state so handlers never read a stale list
+  useEffect(() => {
+    todosRef.current = todos
+  }, [todos])
 
   useEffect(() => {
     emailRef.current = email
   }, [email])
+
+  // When the room changes, restore that room's cached state before the socket
+  // connects. Adjusting state during render is React's recommended way to reset
+  // state when an input changes.
+  if (prevTeamId !== teamId) {
+    setPrevTeamId(teamId)
+
+    const cached = readTeamCache(teamId)
+    const cachedTodos = Array.isArray(cached?.todos) ? cached.todos : []
+
+    setTodosState(cachedTodos)
+    setConfigState(cached?.config ?? null)
+    setHasState(false)
+  }
 
   useEffect(() => {
     if (!enabled || !teamId) return
@@ -159,6 +163,7 @@ export function useTeamRoom({ teamId, email, enabled }) {
         setMembers(
           Array.isArray(message.state.members) ? message.state.members : [],
         )
+        setHasState(true)
 
         writeTeamCache(teamId, { todos: nextTodos, config: nextConfig })
       }
@@ -219,6 +224,7 @@ export function useTeamRoom({ teamId, email, enabled }) {
 
   return {
     status: enabled && teamId ? status : 'idle',
+    hasState,
     todos,
     config,
     members,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { minutesOfDay, parseTime, toTimeValue } from './time'
 import './SprintModal.css'
 
@@ -16,11 +16,6 @@ const THEMES = [
   { name: 'Yellow', value: '#facc15', border: '#b45309' },
   { name: 'Pink', value: '#ec4899', border: '#be185d' },
 ]
-
-// An obvious typo shouldn't silently drop the invite
-function isEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-}
 
 function Caret() {
   return (
@@ -46,7 +41,15 @@ function openPicker(event) {
   }
 }
 
-function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetInviteLink }) {
+function SprintModal({
+  open,
+  mode = 'create',
+  initial,
+  onClose,
+  onStart,
+  onGetInviteLink,
+  onEnableInvite,
+}) {
   const isUpdate = mode === 'update'
 
   const [startTime, setStartTime] = useState(
@@ -64,9 +67,10 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
   )
   const [theme, setTheme] = useState(initial?.themeName ?? 'Green')
 
-  // Optional invite: email a link that recreates this sprint to a teammate
+  // Optional invite: a shareable link that recreates this sprint
   const [invite, setInvite] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState('')
+  const [copied, setCopied] = useState(false)
+  const linkInputRef = useRef(null)
 
   const blockCount = length === 'Customize' ? customBlocks : Number(length)
 
@@ -90,6 +94,12 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
     }
   }
 
+  // Regenerated on every change so the link always matches the current setup
+  const shareLink =
+    invite && typeof onGetInviteLink === 'function'
+      ? onGetInviteLink(currentConfig())
+      : ''
+
   useEffect(() => {
     if (!open) return
 
@@ -101,6 +111,14 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open, onClose])
 
+  // Drop the "Copied!" confirmation after a moment
+  useEffect(() => {
+    if (!copied) return
+
+    const timer = setTimeout(() => setCopied(false), 2500)
+    return () => clearTimeout(timer)
+  }, [copied])
+
   function changeStart(event) {
     setStartTime(event.target.value)
     setError('')
@@ -111,18 +129,38 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
     setError('')
   }
 
-  // Opens the creator's mail client with the sprint link ready to send
-  function emailInvite(to) {
-    const shareLink = onGetInviteLink(currentConfig())
-    const subject = 'Join my focus sprint'
-    const body = `I set up a focus sprint. Open this link to load the same setup:\n\n${shareLink}`
-    const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(
-      subject,
-    )}&body=${encodeURIComponent(body)}`
+  // Copies the shareable link, with a fallback for browsers that block
+  // the async clipboard API
+  async function copyShareLink() {
+    if (!shareLink) return
 
-    const link = document.createElement('a')
-    link.href = mailto
-    link.click()
+    try {
+      await navigator.clipboard.writeText(shareLink)
+      setCopied(true)
+      setError('')
+      return
+    } catch {
+      // Fall through to the manual selection fallback below
+    }
+
+    const input = linkInputRef.current
+    input?.focus()
+    input?.select()
+
+    let copiedBySelection = false
+
+    try {
+      copiedBySelection = document.execCommand('copy')
+    } catch {
+      copiedBySelection = false
+    }
+
+    if (copiedBySelection) {
+      setCopied(true)
+      setError('')
+    } else {
+      setError('Copying was blocked. Select the link and copy it manually.')
+    }
   }
 
   function handleStart() {
@@ -139,28 +177,16 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
       return
     }
 
-    if (invite) {
-      const to = inviteEmail.trim()
-
-      if (!isEmail(to)) {
-        setError("Enter your teammate's email to send the invite.")
-        return
-      }
-
-      emailInvite(to)
-    }
-
     onStart(currentConfig())
   }
 
   function toggleInvite(checked) {
     setInvite(checked)
+    setCopied(false)
     setError('')
-  }
 
-  function changeInviteEmail(event) {
-    setInviteEmail(event.target.value)
-    setError('')
+    // Create/join the shared room so the link we show has a room id
+    if (checked) onEnableInvite?.()
   }
 
   if (!open) return null
@@ -307,18 +333,32 @@ function SprintModal({ open, mode = 'create', initial, onClose, onStart, onGetIn
 
           {invite && (
             <div className="sprint-modal__invite">
-              <input
-                className="sprint-modal__email"
-                type="email"
-                value={inviteEmail}
-                onChange={changeInviteEmail}
-                placeholder="teammate@example.com"
-                aria-label="Teammate's email"
-              />
+              <div className="sprint-modal__invite-row">
+                <input
+                  ref={linkInputRef}
+                  className="sprint-modal__link"
+                  type="text"
+                  value={shareLink}
+                  readOnly
+                  aria-label="Shareable sprint link"
+                  onFocus={(event) => event.currentTarget.select()}
+                />
 
-              <p className="sprint-modal__invite-status">
-                We'll open an email with this sprint's link to your teammate when
-                you start.
+                <button
+                  type="button"
+                  className={`sprint-modal__copy${
+                    copied ? ' sprint-modal__copy--copied' : ''
+                  }`}
+                  onClick={copyShareLink}
+                >
+                  {copied ? 'Copied!' : 'Copy link'}
+                </button>
+              </div>
+
+              <p className="sprint-modal__invite-status" role="status">
+                {copied
+                  ? 'Link copied to your clipboard.'
+                  : 'Share this link so a teammate can open the same sprint.'}
               </p>
             </div>
           )}
