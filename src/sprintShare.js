@@ -32,12 +32,17 @@ function fromBase64Url(value) {
   return new TextDecoder().decode(bytes)
 }
 
-// The link that carries a copy of the sprint's settings
-export function getSprintLink(config) {
+// The link that carries a copy of the sprint's settings. When a team id is
+// given, the link also drops the visitor into that shared room so tasks sync.
+export function getSprintLink(config, teamId) {
   const url = new URL(window.location.href)
   url.search = ''
   url.hash = ''
   url.searchParams.set(SPRINT_PARAM, toBase64Url(JSON.stringify(config)))
+
+  if (teamId) {
+    url.searchParams.set('team', teamId)
+  }
 
   return url.toString()
 }

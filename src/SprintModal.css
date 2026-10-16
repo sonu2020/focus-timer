@@ -268,22 +268,53 @@
   margin-top: 12px;
 }
 
-.sprint-modal__email {
-  width: 100%;
+.sprint-modal__invite-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sprint-modal__link {
+  flex: 1 1 auto;
+  min-width: 0;
   box-sizing: border-box;
   height: 38px;
   padding: 8px 12px;
   border: 1px solid #d4d4d8;
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: #f9fafb;
   color: #111111;
   font: inherit;
   font-size: 15px;
+  text-overflow: ellipsis;
 }
 
-.sprint-modal__email:focus {
+.sprint-modal__link:focus {
   border-color: #111111;
   outline: none;
+}
+
+.sprint-modal__copy {
+  flex: none;
+  height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #000000;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sprint-modal__copy:hover {
+  opacity: 0.92;
+  transform: none;
+}
+
+.sprint-modal__copy--copied {
+  background: #2e7d56;
 }
 
 .sprint-modal__invite-status {
@@ -296,5 +327,14 @@
 @media (max-width: 420px) {
   .sprint-modal__segments {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sprint-modal__invite-row {
+    flex-wrap: wrap;
+  }
+
+  .sprint-modal__link,
+  .sprint-modal__copy {
+    width: 100%;
   }
 }

@@ -2,7 +2,20 @@ import { formatToday } from './time'
 import './Header.css'
 // import AmbienceMenu from './AmbienceMenu'
 
-function Header({ onStart, todoOpen, todoCount, onToggleTodos }) {
+const LIVE_LABELS = {
+  online: 'Live',
+  connecting: 'Connecting',
+  offline: 'Offline',
+}
+
+function Header({
+  onStart,
+  todoOpen,
+  todoCount,
+  onToggleTodos,
+  collaborating,
+  teamStatus,
+}) {
   const { day, monthYear } = formatToday()
 
   return (
@@ -12,6 +25,17 @@ function Header({ onStart, todoOpen, todoCount, onToggleTodos }) {
           <span className="app-header__day">{day}</span>
           <span className="app-header__month">{monthYear}</span>
         </div>
+
+        {collaborating && (
+          <span
+            className={`app-header__live app-header__live--${teamStatus}`}
+            role="status"
+            title={`Sprint sync: ${LIVE_LABELS[teamStatus] ?? 'Offline'}`}
+          >
+            <span className="app-header__live-dot" aria-hidden="true" />
+            {LIVE_LABELS[teamStatus] ?? 'Offline'}
+          </span>
+        )}
 
         <div className="app-header__actions">
           <button
