@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--alpha-black-50);
 }
 
 .sprint-complete__dialog {
@@ -19,10 +19,10 @@
   box-sizing: border-box;
   padding: 32px;
   border-radius: 16px;
-  background: #ffffff;
-  color: #111111;
+  background: var(--white);
+  color: var(--gray-950);
   text-align: center;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 25px 50px -12px var(--alpha-black-35);
 }
 
 .sprint-complete__icon {
@@ -31,8 +31,8 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--success-soft);
+  color: var(--success-strong);
 }
 
 .sprint-complete__icon svg {
@@ -44,14 +44,14 @@
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #000000;
+  color: var(--black);
 }
 
 .sprint-complete__text {
   margin: 0;
   font-size: 14px;
   line-height: 1.4;
-  color: #6b7280;
+  color: var(--gray-450);
 }
 
 .sprint-complete__button {
@@ -59,8 +59,8 @@
   padding: 11px 28px;
   border: 0;
   border-radius: 8px;
-  background: #000000;
-  color: #ffffff;
+  background: var(--black);
+  color: var(--white);
   font-size: 15px;
   font-weight: 500;
 }
@@ -83,13 +83,13 @@
 }
 
 .sprint-complete__button--ghost {
-  background: #ffffff;
-  color: #000000;
-  box-shadow: inset 0 0 0 1px #000000;
+  background: var(--white);
+  color: var(--black);
+  box-shadow: inset 0 0 0 1px var(--black);
 }
 
 .sprint-complete__button--ghost:hover {
-  background: #f5f5f5;
+  background: var(--gray-30);
   opacity: 1;
 }
 
@@ -101,7 +101,7 @@
   width: 100%;
   margin-top: 4px;
   padding-top: 16px;
-  border-top: 1px solid #ececec;
+  border-top: 1px solid var(--gray-60);
 }
 
 .sprint-complete__presets {
@@ -113,23 +113,23 @@
 .sprint-complete__preset {
   flex: 1;
   padding: 9px 6px;
-  border: 1px solid #d4d4d8;
+  border: 1px solid var(--gray-120);
   border-radius: 8px;
-  background: #ffffff;
-  color: #333333;
+  background: var(--white);
+  color: var(--gray-800);
   font-size: 13px;
   font-weight: 500;
 }
 
 .sprint-complete__preset:hover {
-  border-color: #111111;
+  border-color: var(--gray-950);
   transform: none;
 }
 
 .sprint-complete__label {
   font-size: 13px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--gray-450);
   text-align: left;
 }
 
@@ -138,23 +138,23 @@
   box-sizing: border-box;
   height: 38px;
   padding: 8px 12px;
-  border: 1px solid #d4d4d8;
+  border: 1px solid var(--gray-120);
   border-radius: 8px;
-  background-color: #ffffff;
-  color: #111111;
+  background-color: var(--white);
+  color: var(--gray-950);
   font: inherit;
   font-size: 15px;
   color-scheme: light;
 }
 
 .sprint-complete__time:focus {
-  border-color: #111111;
+  border-color: var(--gray-950);
   outline: none;
 }
 
 .sprint-complete__error {
   margin: 0;
   font-size: 12px;
-  color: #dc2626;
+  color: var(--error);
   text-align: left;
 }

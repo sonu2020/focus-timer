@@ -6,9 +6,9 @@
   align-items: center;
   justify-content: center;
   padding: 0 32px;
-  background-color: #ffffff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08);
+  background-color: var(--white);
+  border-bottom: 1px solid var(--alpha-black-20);
+  box-shadow: 0px 4px 20px var(--alpha-black-8);
 }
 
 .app-header__inner {
@@ -30,7 +30,7 @@
   font-size: 20px;
   font-weight: 700;
   line-height: 1.3;
-  color: #000000;
+  color: var(--black);
 }
 
 .app-header__month {
@@ -38,7 +38,7 @@
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
-  color: #000000;
+  color: var(--black);
 }
 
 /* Live-collaboration indicator shown while a sprint room is shared */
@@ -48,8 +48,8 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--gray-40);
+  color: var(--gray-700);
   font-size: 13px;
   font-weight: 600;
   line-height: 1;
@@ -59,34 +59,34 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #9ca3af;
+  background: var(--gray-200);
 }
 
 .app-header__live--online {
-  background: #e7f7ee;
-  color: #2e7d56;
+  background: var(--success-chip);
+  color: var(--success);
 }
 
 .app-header__live--online .app-header__live-dot {
-  background: #2e7d56;
+  background: var(--success);
 }
 
 .app-header__live--connecting {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--warning-soft);
+  color: var(--warning-strong);
 }
 
 .app-header__live--connecting .app-header__live-dot {
-  background: #f59e0b;
+  background: var(--warning);
 }
 
 .app-header__live--offline {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--danger-soft);
+  color: var(--danger-strong);
 }
 
 .app-header__live--offline .app-header__live-dot {
-  background: #ef4444;
+  background: var(--danger);
 }
 
 /* Start a Sprint + music button, joined with no gap */
@@ -100,8 +100,8 @@
   padding: 10px 20px;
   border: 0;
   border-radius: 8px;
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--black);
+  color: var(--white);
   font-weight: 500;
   transition: opacity 0.2s ease;
 }
@@ -118,8 +118,8 @@
   padding: 10px 20px;
   border: 0;
   border-radius: 8px;
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--black);
+  color: var(--white);
   font-weight: 500;
   cursor: pointer;
   transition: opacity 0.2s ease;
@@ -131,9 +131,9 @@
 }
 
 .app-header__todo[aria-expanded='true'] {
-  background-color: #ffffff;
-  color: #000000;
-  box-shadow: inset 0 0 0 1px #000000;
+  background-color: var(--white);
+  color: var(--black);
+  box-shadow: inset 0 0 0 1px var(--black);
 }
 
 .app-header__todo-icon {
@@ -150,16 +150,16 @@
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #ffffff;
-  color: #000000;
+  background: var(--white);
+  color: var(--black);
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
 }
 
 .app-header__todo[aria-expanded='true'] .app-header__todo-count {
-  background: #000000;
-  color: #ffffff;
+  background: var(--black);
+  color: var(--white);
 }
 
 .app-header__actions .music-menu {
@@ -170,10 +170,10 @@
 .app-header__actions .music-button {
   padding: 0 16px;
   border: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.28);
+  border-left: 1px solid var(--alpha-white-28);
   border-radius: 0 8px 8px 0;
-  background: #000000;
-  color: #ffffff;
+  background: var(--black);
+  color: var(--white);
   font-size: 17px;
   line-height: 1;
   box-shadow: none;
@@ -181,12 +181,12 @@
 }
 
 .app-header__actions .music-button:hover {
-  background: #222222;
+  background: var(--gray-850);
   transform: none;
 }
 
 .app-header__actions .music-button.is-active {
-  background: #333333;
+  background: var(--gray-800);
 }
 
 @media (max-width: 480px) {

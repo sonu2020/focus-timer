@@ -11,7 +11,7 @@ html {
   overflow-x: clip;
   overflow-y: scroll;
   scrollbar-gutter: stable;
-  background-color: #ffffff;
+  background-color: var(--white);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -38,7 +38,7 @@ body {
   padding: 0;
   border: 0;
   overflow-x: clip;
-  background-color: #ffffff;
+  background-color: var(--white);
   font-family: var(--sans);
 }
 
@@ -51,7 +51,7 @@ body {
   max-width: 100%;
   font-family: var(--sans);
   font-variant: common-ligatures tabular-nums;
-  background: #ffffff;
+  background: var(--white);
   overflow-x: clip;
 }
 
@@ -79,8 +79,8 @@ button:active {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  color: #111111;
-  background-color: #ffffff;
+  color: var(--gray-950);
+  background-color: var(--white);
   overflow-x: clip;
   transition: background-color 0.3s;
 }
@@ -98,16 +98,16 @@ button:active {
 .app.short,
 .app.long {
   background-image: none;
-  background-color: #ffffff;
+  background-color: var(--white);
 }
 
 .app.timeline-mode {
   background-image: none;
-  background-color: #ffffff;
+  background-color: var(--white);
 }
 
 .timeline-mode .footer {
-  border-top-color: #dddddd;
+  border-top-color: var(--gray-100);
 }
 
 .content {
@@ -124,7 +124,7 @@ button:active {
 .timer-card {
   padding: 28px 24px 32px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--alpha-black-4);
 }
 
 .tabs {
@@ -138,19 +138,19 @@ button:active {
   padding: 10px 15px;
   border: 1px solid transparent;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.05);
-  color: #111111;
+  background: var(--alpha-black-5);
+  color: var(--gray-950);
 }
 
 .tab:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--alpha-black-10);
 }
 
 .tab.active {
-  background: rgba(0, 0, 0, 0.12);
-  border-color: rgba(0, 0, 0, 0.25);
+  background: var(--alpha-black-12);
+  border-color: var(--alpha-black-25);
   font-weight: bold;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 var(--alpha-white-60);
 }
 
 .timer-circle {
@@ -177,11 +177,11 @@ button:active {
 }
 
 .ring-background {
-  stroke: rgba(0, 0, 0, 0.12);
+  stroke: var(--alpha-black-12);
 }
 
 .ring-progress {
-  stroke: #111111;
+  stroke: var(--gray-950);
   stroke-linecap: round;
   transition: stroke-dashoffset 0.25s linear;
 }
@@ -206,44 +206,44 @@ button:active {
   padding: 16px 30px;
   border: 0;
   border-radius: 999px;
-  background: #ba4949;
-  color: #ffffff;
+  background: var(--pomodoro);
+  color: var(--white);
   font-size: 21px;
   font-weight: bold;
   letter-spacing: 0.8px;
   box-shadow:
-    0 14px 30px rgba(0, 0, 0, 0.2),
-    inset 0 -3px 0 rgba(0, 0, 0, 0.12);
+    0 14px 30px var(--alpha-black-20),
+    inset 0 -3px 0 var(--alpha-black-12);
 }
 
 .start-button:hover {
   box-shadow:
-    0 18px 38px rgba(0, 0, 0, 0.28),
-    inset 0 -3px 0 rgba(0, 0, 0, 0.12);
+    0 18px 38px var(--alpha-black-28),
+    inset 0 -3px 0 var(--alpha-black-12);
 }
 
 .short .start-button {
-  background: #38858a;
-  color: #ffffff;
+  background: var(--break-short);
+  color: var(--white);
 }
 
 .long .start-button {
-  background: #397097;
-  color: #ffffff;
+  background: var(--break-long);
+  color: var(--white);
 }
 
 .reset-button {
   padding: 13px 18px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--alpha-black-25);
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.04);
-  color: #111111;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  background: var(--alpha-black-4);
+  color: var(--gray-950);
+  box-shadow: 0 6px 16px var(--alpha-black-8);
 }
 
 .reset-button:hover {
-  background: rgba(0, 0, 0, 0.09);
-  border-color: rgba(0, 0, 0, 0.5);
+  background: var(--alpha-black-9);
+  border-color: var(--alpha-black-50);
 }
 
 .session-count {
@@ -328,7 +328,7 @@ button:active {
 
 .timeline {
   width: 100%;
-  color: #111111;
+  color: var(--gray-950);
 }
 
 .timeline-controls {
@@ -350,16 +350,16 @@ button:active {
   font-weight: bold;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #666666;
+  color: var(--gray-500);
 }
 
 .timeline-control input,
 .timeline-control select {
   padding: 9px 11px;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--gray-140);
   border-radius: 8px;
-  background-color: #ffffff;
-  color: #111111;
+  background-color: var(--white);
+  color: var(--gray-950);
   font: inherit;
   font-size: 15px;
   color-scheme: light;
@@ -367,12 +367,12 @@ button:active {
 
 .timeline-control input:hover,
 .timeline-control select:hover {
-  border-color: #888888;
+  border-color: var(--gray-300);
 }
 
 .timeline-control input:focus,
 .timeline-control select:focus {
-  border-color: #16a34a;
+  border-color: var(--accent-focus);
   outline: none;
 }
 
@@ -395,7 +395,7 @@ button:active {
   align-items: center;
   min-height: 114px;
   padding: 36px 0 26px;
-  border-bottom: 2px solid #dddddd;
+  border-bottom: 2px solid var(--gray-100);
   container-type: inline-size;
 }
 
@@ -406,7 +406,7 @@ button:active {
   font-size: 15px;
   line-height: 1.4;
   letter-spacing: 0.2%;
-  color: #222222;
+  color: var(--gray-850);
 }
 
 .timeline-markers--dense .marker-suffix {
@@ -416,7 +416,7 @@ button:active {
 .marker-suffix {
   margin-left: 9px;
   font-weight: 400;
-  color: #777777;
+  color: var(--gray-400);
   opacity: 0.7;
 }
 
@@ -435,23 +435,23 @@ button:active {
   justify-self: center;
   align-self: start;
   border-radius: 4px;
-  background-color: #4ade80;
-  box-shadow: 0 0 14px rgba(74, 222, 128, 0.28);
+  background-color: var(--accent-timeline);
+  box-shadow: 0 0 14px var(--accent-timeline-glow);
   transition: background-color 0.4s ease;
 }
 
 .timeline-bar.past {
-  background-color: #d1d5db;
+  background-color: var(--gray-130);
   box-shadow: none;
 }
 
 .timeline-bar.now {
-  background-color: #4ade80;
-  box-shadow: 0 0 18px rgba(74, 222, 128, 0.45);
+  background-color: var(--accent-timeline);
+  box-shadow: 0 0 18px var(--accent-timeline-glow-strong);
   background-image: linear-gradient(
     to top,
-    #d1d5db var(--fill, 0%),
-    #4ade80 var(--fill, 0%)
+    var(--gray-130) var(--fill, 0%),
+    var(--accent-timeline) var(--fill, 0%)
   );
 }
 
@@ -475,14 +475,14 @@ button:active {
   width: 29px;
   height: 29px;
   border-radius: 50%;
-  background-color: #cccccc;
+  background-color: var(--gray-140);
 }
 
 .status-text {
   overflow: hidden;
   font-size: 22px;
   line-height: 27px;
-  color: #111111;
+  color: var(--gray-950);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -492,7 +492,7 @@ button:active {
   padding: 0;
   border: 0;
   background: none;
-  color: #111111;
+  color: var(--gray-950);
   font-size: 14px;
   opacity: 0.55;
 }
@@ -545,8 +545,8 @@ button:active {
   .timeline-bar.now {
     background-image: linear-gradient(
       to right,
-      #d1d5db var(--fill, 0%),
-      #4ade80 var(--fill, 0%)
+      var(--gray-130) var(--fill, 0%),
+      var(--accent-timeline) var(--fill, 0%)
     );
   }
 
@@ -574,11 +574,11 @@ button:active {
   width: min(100%, 780px);
   margin: 80px auto;
   padding: 36px 48px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--alpha-black-10);
   border-radius: 20px;
-  background: #fafafa;
-  color: #111111;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  background: var(--gray-20);
+  color: var(--gray-950);
+  box-shadow: 0 15px 35px var(--alpha-black-10);
   scroll-margin-top: 40px;
   text-align: left;
   transition:
@@ -587,8 +587,8 @@ button:active {
 }
 
 .about:hover {
-  border-color: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.14);
+  border-color: var(--alpha-black-20);
+  box-shadow: 0 15px 35px var(--alpha-black-14);
 }
 
 .about-title {
@@ -599,7 +599,7 @@ button:active {
   font-size: 2rem;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: #111111;
+  color: var(--gray-950);
 }
 
 .about-title::after {
@@ -610,7 +610,7 @@ button:active {
   width: 76px;
   height: 3px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #d9962b, rgba(217, 150, 43, 0.1));
+  background: linear-gradient(90deg, var(--gold), var(--gold-glow));
 }
 
 .about-intro {
@@ -618,7 +618,7 @@ button:active {
   max-width: 64ch;
   font-size: 17px;
   line-height: 1.65;
-  color: rgba(0, 0, 0, 0.72);
+  color: var(--alpha-black-72);
 }
 
 .about-grid {
@@ -630,9 +630,9 @@ button:active {
 
 .about-item {
   padding: 20px 22px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--alpha-black-8);
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--white);
   transition:
     transform 0.3s ease,
     background 0.3s ease,
@@ -642,9 +642,9 @@ button:active {
 
 .about-item:hover {
   transform: translateY(-3px);
-  border-color: rgba(0, 0, 0, 0.18);
-  background: #ffffff;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  border-color: var(--alpha-black-18);
+  background: var(--white);
+  box-shadow: 0 10px 24px var(--alpha-black-8);
 }
 
 .about-item:last-child {
@@ -655,10 +655,10 @@ button:active {
   display: inline-block;
   margin: 0 0 12px;
   padding: 5px 13px;
-  border: 1px solid rgba(183, 121, 31, 0.35);
+  border: 1px solid var(--gold-border);
   border-radius: 999px;
-  background: rgba(240, 179, 92, 0.15);
-  color: #9a6212;
+  background: var(--gold-chip);
+  color: var(--gold-strong);
   font-size: 0.75rem;
   font-weight: bold;
   letter-spacing: 0.1em;
@@ -669,11 +669,11 @@ button:active {
   margin: 0;
   font-size: 15px;
   line-height: 1.65;
-  color: rgba(0, 0, 0, 0.78);
+  color: var(--alpha-black-78);
 }
 
 .about-item strong {
-  color: #111111;
+  color: var(--gray-950);
 }
 
 .footer {
@@ -683,7 +683,7 @@ button:active {
   margin-top: 20px;
   padding: 12px 0;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.65);
+  color: var(--alpha-black-65);
   transition:
     opacity 0.35s ease,
     visibility 0.35s ease;
@@ -699,7 +699,7 @@ button:active {
   padding: 0;
   border: 0;
   background: none;
-  color: #111111;
+  color: var(--gray-950);
   font-size: 14px;
   opacity: 0.65;
   text-decoration: none;
@@ -750,8 +750,8 @@ button:active {
   padding: 10px 20px;
   border: 0;
   border-radius: 8px;
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--black);
+  color: var(--white);
   font-weight: 500;
   transition: opacity 0.2s ease;
   cursor: pointer;
@@ -766,12 +766,12 @@ button:active {
   padding: 10px 15px;
   font-size: 17px;
   line-height: 1;
-  color: white;
+  color: var(--white);
 }
 
 .music-button.is-active {
-  background: rgba(255, 255, 255, 0.28);
-  border-color: rgba(255, 255, 255, 0.7);
+  background: var(--alpha-white-28);
+  border-color: var(--alpha-white-70);
 }
 
 .music-panel {
@@ -781,10 +781,10 @@ button:active {
   z-index: 30;
   width: 264px;
   padding: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--alpha-black-15);
   border-radius: 12px;
-  background: white;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+  background: var(--white);
+  box-shadow: 0 18px 40px var(--alpha-black-20);
   backdrop-filter: blur(14px);
   text-align: left;
   animation: menu-in 0.18s ease both;
@@ -814,7 +814,7 @@ button:active {
   font-weight: bold;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--alpha-black-50);
 }
 
 .music-options {
@@ -835,13 +835,13 @@ button:active {
   padding: 9px 14px;
   border: 1px solid transparent;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.08);
-  color: white;
+  background: var(--alpha-black-8);
+  color: var(--white);
   text-align: left;
 }
 
 .music-option:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--alpha-white-18);
   transform: none;
 }
 
@@ -859,10 +859,10 @@ button:active {
 }
 
 .music-option.active {
-  background: rgba(255, 255, 255, 0.28);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: var(--alpha-white-28);
+  border-color: var(--alpha-white-40);
   font-weight: bold;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 1px 0 var(--alpha-white-25);
 }
 
 .music-volume {
@@ -871,7 +871,7 @@ button:active {
   gap: 10px;
   margin-top: 14px;
   padding-top: 13px;
-  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  border-top: 1px solid var(--alpha-white-22);
 }
 
 .music-volume label {
@@ -879,7 +879,7 @@ button:active {
   font-weight: bold;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--alpha-black-50);
 }
 
 .music-volume input {
