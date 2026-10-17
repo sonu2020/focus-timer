@@ -10,11 +10,13 @@ import {
   readIdentity,
   saveIdentity,
   readInviteTeam,
+  readActiveTeam,
+  markTeamActive,
   generateTeamId,
   writeTeamCache,
 } from './useTeamRoom'
 import { getSprintLink, readSharedSprint } from './sprintShare'
-import { readStored, writeStored } from './storage'
+import { readSession, writeSession } from './storage'
 import { requestNotificationPermission, unlockBlockAudio } from './blockAlerts'
 
 const labels = {
@@ -39,22 +41,26 @@ const DEFAULT_SPRINT = {
   theme: '#52d696',
 }
 
-// Where the visitor's chosen times are saved in their browser
+// Where the visitor's chosen times are kept for the current browsing session
 const SPRINT_STORAGE_KEY = 'focus-timer.sprint-config'
 
-// Where the visitor's tasks are saved in their browser
+// Where the visitor's tasks are kept for the current browsing session
 const TODOS_STORAGE_KEY = 'focus-timer.todos'
 
-// Returns the saved tasks, or an empty list for a first-time visitor
+// Which view (home/timeline) the current browsing session is showing, so a
+// reload lands back on it while a fresh visit always starts at home
+const VIEW_STORAGE_KEY = 'focus-timer.view-mode'
+
+// Returns this session's tasks, or an empty list for a fresh visit
 function readSavedTodos() {
-  const saved = readStored(TODOS_STORAGE_KEY, [])
+  const saved = readSession(TODOS_STORAGE_KEY, [])
 
   return Array.isArray(saved) ? saved : []
 }
 
-// Returns the saved sprint settings, or null for a first-time visitor
+// Returns this session's sprint settings, or null for a fresh visit
 function readSavedSprint() {
-  const saved = readStored(SPRINT_STORAGE_KEY)
+  const saved = readSession(SPRINT_STORAGE_KEY)
 
   if (
     !saved ||
@@ -67,9 +73,9 @@ function readSavedSprint() {
   return { ...DEFAULT_SPRINT, ...saved }
 }
 
-// Remembers the sprint settings for the next visit
+// Remembers the sprint settings for the rest of this browsing session
 function saveSprintConfig(config) {
-  writeStored(SPRINT_STORAGE_KEY, config)
+  writeSession(SPRINT_STORAGE_KEY, config)
 }
 
 function App() {
@@ -80,17 +86,20 @@ function App() {
   // A sprint carried in the URL (?sprint=...) opens straight away
   const [sharedSprint] = useState(readSharedSprint)
   const [incomingTeam] = useState(readInviteTeam)
-  // Like Excalidraw, a bare visit always lands on a fresh home page: a sprint
-  // saved in localStorage never picks the first view on its own. Only a
-  // shared link (or an explicit start) drops straight into the timeline.
-  const [viewMode, setViewMode] = useState(sharedSprint ? 'timeline' : 'home')
+  // A shared link opens the timeline straight away. Otherwise the view is
+  // restored from this session only, so a reload keeps it but a fresh visit
+  // (new tab/browser) always starts at home.
+  const [viewMode, setViewMode] = useState(() => {
+    if (sharedSprint) return 'timeline'
+
+    return readSession(VIEW_STORAGE_KEY) === 'timeline' ? 'timeline' : 'home'
+  })
   const [scrollLocked, setScrollLocked] = useState(true)
   const [aboutVisible, setAboutVisible] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState('create')
   // Settings used to prefill the sprint modal: the shared sprint, then the
-  // saved one, then the defaults. Reading these never starts a sprint—the view
-  // mode above stays on 'home' until the visitor explicitly starts one.
+  // saved one, then the defaults.
   const [localSprintConfig, setLocalSprintConfig] = useState(
     () => sharedSprint ?? readSavedSprint() ?? DEFAULT_SPRINT,
   )
@@ -108,10 +117,34 @@ function App() {
     return nextIdentity
   })
 
+  // A team is only "live" for the session that joined or created it. A teamId
+  // left in localStorage by an earlier visit stays dormant until this visitor
+  // rejoins through an invite link, or offers a fresh invite of their own.
+  const [teamActive, setTeamActive] = useState(() => {
+    if (!identity) return false
+    if (incomingTeam && incomingTeam === identity.teamId) return true
+
+    return readActiveTeam() === identity.teamId
+  })
+
+  // Persist the joined room for this session so a refresh keeps it live
+  useEffect(() => {
+    if (incomingTeam && incomingTeam === identity?.teamId) {
+      markTeamActive(incomingTeam)
+    }
+  }, [incomingTeam, identity?.teamId])
+
+  const inTeam = Boolean(identity) && teamActive
+
   // Persist a sprint opened from a link so a refresh keeps it
   useEffect(() => {
     if (sharedSprint) saveSprintConfig(sharedSprint)
   }, [sharedSprint])
+
+  // Keep this session's view so a reload returns to it; closing the tab clears it
+  useEffect(() => {
+    writeSession(VIEW_STORAGE_KEY, viewMode)
+  }, [viewMode])
 
   // Drop the share params from the address bar once they've been handled
   useEffect(() => {
@@ -130,15 +163,14 @@ function App() {
     )
   }, [])
 
-  // When part of a team, the team's room holds the shared tasks and settings;
-  // otherwise everything stays local to this browser.
+  // When part of a live team, the team's room holds the shared tasks and
+  // settings; otherwise everything stays local to this browser.
   const collab = useTeamRoom({
     teamId: identity?.teamId,
     email: identity?.email,
-    enabled: Boolean(identity),
+    enabled: inTeam,
   })
 
-  const inTeam = Boolean(identity)
   const todos = inTeam ? collab.todos : localTodos
   const setTodos = inTeam ? collab.setTodos : setLocalTodos
   const sprintConfig =
@@ -186,9 +218,9 @@ function App() {
     setTeamTodos,
   ])
 
-  // keep the tasks in the browser so a refresh doesn't lose them
+  // keep the session's tasks so a refresh doesn't lose them (cleared on close)
   useEffect(() => {
-    if (!inTeam) writeStored(TODOS_STORAGE_KEY, localTodos)
+    if (!inTeam) writeSession(TODOS_STORAGE_KEY, localTodos)
   }, [localTodos, inTeam])
 
   useEffect(() => {
@@ -303,7 +335,12 @@ function App() {
   // Turns a solo visitor into a shared room the moment they offer to invite
   // someone, so the link they copy carries a room everyone can join
   function enableInvite() {
-    if (identity?.teamId) return identity.teamId
+    if (identity?.teamId) {
+      // Re-activate a room this browser already belongs to
+      markTeamActive(identity.teamId)
+      setTeamActive(true)
+      return identity.teamId
+    }
 
     const teamId = generateTeamId()
     const nextIdentity = { email: identity?.email ?? '', teamId }
@@ -311,7 +348,9 @@ function App() {
     // Seed the room's cache with the tasks and sprint we already have
     writeTeamCache(teamId, { todos: localTodos, config: localSprintConfig })
     saveIdentity(nextIdentity)
+    markTeamActive(teamId)
     setIdentity(nextIdentity)
+    setTeamActive(true)
 
     return teamId
   }
@@ -331,7 +370,7 @@ function App() {
     // A brand-new sprint starts with a clean task list
     if (modalMode === 'create') {
       setLocalTodos([])
-      writeStored(TODOS_STORAGE_KEY, [])
+      writeSession(TODOS_STORAGE_KEY, [])
 
       if (inTeam) setTeamTodos([])
     }
@@ -362,7 +401,7 @@ function App() {
   function handleSprintDone() {
     // Wrapping up clears the tasks so the next sprint starts fresh
     setLocalTodos([])
-    writeStored(TODOS_STORAGE_KEY, [])
+    writeSession(TODOS_STORAGE_KEY, [])
     setSprintEnded(false)
     setViewMode('home')
   }

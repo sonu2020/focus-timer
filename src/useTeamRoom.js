@@ -53,6 +53,34 @@ export function clearIdentity() {
   removeStored(IDENTITY_STORAGE_KEY)
 }
 
+// Tracks which team room this browsing session is actively using. The team id
+// itself is remembered in localStorage, but a room only counts as "live" for
+// the session that joined or created it, so a team left behind by an earlier
+// visit never lights up the Live indicator on its own.
+const ACTIVE_TEAM_SESSION_KEY = 'focus-timer.active-team'
+
+export function readActiveTeam() {
+  try {
+    const teamId = sessionStorage.getItem(ACTIVE_TEAM_SESSION_KEY)
+
+    return typeof teamId === 'string' ? teamId.trim() : ''
+  } catch {
+    return ''
+  }
+}
+
+export function markTeamActive(teamId) {
+  try {
+    if (teamId) {
+      sessionStorage.setItem(ACTIVE_TEAM_SESSION_KEY, teamId)
+    } else {
+      sessionStorage.removeItem(ACTIVE_TEAM_SESSION_KEY)
+    }
+  } catch {
+    // storage unavailable; the room just won't stay live across a refresh
+  }
+}
+
 // The shareable link that drops a teammate straight into this team
 export function getInviteLink(teamId) {
   return `${window.location.origin}/?team=${encodeURIComponent(teamId)}`
