@@ -10,7 +10,8 @@
     "build": "vite build",
     "deploy": "vite build && wrangler deploy",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "bun run build"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
