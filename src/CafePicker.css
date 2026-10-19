@@ -31,7 +31,7 @@
   position: fixed;
   inset: 0;
   z-index: 9998;
-  background: rgba(0, 0, 0, 0.58);
+  background: var(--alpha-black-58);
 }
 
 /* ---------- Black pill (same style as the Update Sprint button) ---------- */
@@ -45,27 +45,20 @@
   height: 46px;
   padding: 10px 20px;
   border: 0;
-  border-radius: 8px;
-  background-color: #000000;
-  color: #ffffff;
-  font-weight: 500;
-  font-size: 16px;
-  transition: opacity 0.2s ease;
-}
-
-.cafe-player__pill:hover {
-  opacity: 0.9;
+  border-radius: calc(6 * var(--u));
+  background: var(--black);
+  color: var(--white);
 }
 
 .cafe-player__pill-icon {
   display: grid;
   place-items: center;
+  width: calc(29 * var(--u));
+  height: calc(29 * var(--u));
+  border-radius: calc(6 * var(--u));
+  background: var(--white);
+  color: var(--black);
   flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  background: #fff;
-  color: #000;
 }
 
 .cafe-player__pill-icon svg {
@@ -102,9 +95,9 @@
   overflow-y: auto;
   padding: calc(49 * var(--u)) 0 calc(27 * var(--u));
   border-radius: calc(8 * var(--u));
-  background: #fff;
-  color: #000;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  background: var(--white);
+  color: var(--black);
+  box-shadow: 0 12px 40px var(--alpha-black-25);
 }
 /* Close button (38 x 38) */
 .cafe-player__close {
@@ -118,8 +111,8 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: #c4c4c4;
-  color: #fff;
+  background: var(--gray-150);
+  color: var(--white);
 }
 
 .cafe-player__close svg {
@@ -133,13 +126,13 @@
   height: calc(5 * var(--u));
   margin: calc(96 * var(--u)) calc(77 * var(--u)) 0 calc(93 * var(--u));
   border-radius: 3px;
-  background: #d9d9d9;
+  background: var(--gray-110);
 }
 
 .cafe-player__bar-fill {
   height: 100%;
   border-radius: 3px;
-  background: #000;
+  background: var(--black);
 }
 
 .cafe-player__bar-dot {
@@ -148,9 +141,9 @@
   box-sizing: border-box;
   width: calc(19 * var(--u));
   height: calc(19 * var(--u));
-  border: calc(3 * var(--u)) solid #e9e9e9;
+  border: calc(3 * var(--u)) solid var(--gray-70);
   border-radius: 50%;
-  background: #000;
+  background: var(--black);
   transform: translate(-50%, -50%);
 }
 
@@ -168,7 +161,7 @@
 .cafe-player__divider {
   height: 2px;
   margin: calc(34 * var(--u)) calc(50 * var(--u)) 0 calc(51 * var(--u));
-  background: #e0e0e0;
+  background: var(--gray-90);
 }
 
 /* Controls */
@@ -186,7 +179,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #666;
+  color: var(--gray-500);
 }
 
 .cafe-player__skip svg {
@@ -202,8 +195,8 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: #000;
-  color: #fff;
+  background: var(--black);
+  color: var(--white);
 }
 
 .cafe-player__toggle svg {
@@ -222,7 +215,7 @@
   box-sizing: border-box;
   height: calc(80 * var(--u));
   padding-right: calc(8 * var(--u));
-  border-bottom: 1px solid #e3e3e3;
+  border-bottom: 1px solid var(--gray-80);
 }
 
 .cafe-player__row:last-child {
@@ -240,7 +233,7 @@
   padding: 0 0 0 calc(26 * var(--u));
   border: 0;
   background: none;
-  color: #000;
+  color: var(--black);
   font-size: calc(17 * var(--u));
   text-align: left;
 }
@@ -273,7 +266,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #000;
+  color: var(--black);
 }
 
 .cafe-player__more svg {

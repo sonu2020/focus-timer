@@ -13,11 +13,11 @@
   max-width: calc(100vw - 32px);
   box-sizing: border-box;
   padding: 16px;
-  border: 1px solid #000000;
+  border: 1px solid var(--black);
   border-radius: 12px;
-  background: #ffffff;
-  color: #000000;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+  background: var(--white);
+  color: var(--black);
+  box-shadow: 0 18px 40px var(--alpha-black-20);
   text-align: left;
   animation: music-panel-in 0.18s ease both;
 }
@@ -46,7 +46,7 @@
   font-weight: bold;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #000000;
+  color: var(--black);
 }
 
 .music-menu .music-options {
@@ -65,21 +65,21 @@
   justify-content: space-between;
   gap: 10px;
   padding: 9px 14px;
-  border: 1px solid #000000;
+  border: 1px solid var(--black);
   border-radius: 999px;
-  background: #ffffff;
-  color: #000000;
+  background: var(--white);
+  color: var(--black);
   text-align: left;
   box-shadow: none;
 }
 
 .music-menu .music-option:hover {
-  background: #f0f0f0;
+  background: var(--gray-50);
   transform: none;
 }
 
 .music-menu .music-option:focus-visible {
-  outline: 2px solid #000000;
+  outline: 2px solid var(--black);
   outline-offset: 2px;
 }
 
@@ -98,14 +98,14 @@
 }
 
 .music-menu .music-option.active {
-  background: #000000;
-  border-color: #000000;
-  color: #ffffff;
+  background: var(--black);
+  border-color: var(--black);
+  color: var(--white);
   font-weight: bold;
 }
 
 .music-menu .music-option.active:hover {
-  background: #222222;
+  background: var(--gray-850);
 }
 
 .music-menu .music-volume {
@@ -114,7 +114,7 @@
   gap: 10px;
   margin-top: 14px;
   padding-top: 13px;
-  border-top: 1px solid #000000;
+  border-top: 1px solid var(--black);
 }
 
 .music-menu .music-volume label {
@@ -122,11 +122,11 @@
   font-weight: bold;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #000000;
+  color: var(--black);
 }
 
 .music-menu .music-volume input {
   flex: 1;
   min-width: 0;
-  accent-color: #000000;
+  accent-color: var(--black);
 }

@@ -17,6 +17,100 @@
     sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
+  /* ===== App neutrals ===== */
+  --white: #ffffff;
+  --black: #000000;
+  --gray-20: #fafafa;
+  --gray-25: #f9fafb;
+  --gray-30: #f5f5f5;
+  --gray-40: #f3f4f6;
+  --gray-50: #f0f0f0;
+  --gray-60: #ececec;
+  --gray-70: #e9e9e9;
+  --gray-80: #e3e3e3;
+  --gray-90: #e0e0e0;
+  --gray-100: #dddddd;
+  --gray-110: #d9d9d9;
+  --gray-120: #d4d4d8;
+  --gray-130: #d1d5db;
+  --gray-140: #cccccc;
+  --gray-150: #c4c4c4;
+  --gray-200: #9ca3af;
+  --gray-250: #8e8e93;
+  --gray-300: #888888;
+  --gray-350: #808080;
+  --gray-400: #777777;
+  --gray-450: #6b7280;
+  --gray-500: #666666;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #333333;
+  --gray-850: #222222;
+  --gray-900: #111827;
+  --gray-950: #111111;
+
+  /* ===== App accent colors ===== */
+  --accent-sprint: #52d696;
+  --accent-timeline: #4ade80;
+  --accent-focus: #16a34a;
+  --pomodoro: #ba4949;
+  --break-short: #38858a;
+  --break-long: #397097;
+  --gold: #d9962b;
+  --gold-strong: #9a6212;
+
+  /* ===== App status colors ===== */
+  --success: #2e7d56;
+  --success-strong: #047857;
+  --success-soft: #ecfdf5;
+  --success-chip: #e7f7ee;
+  --warning: #f59e0b;
+  --warning-strong: #b45309;
+  --warning-soft: #fef3c7;
+  --danger: #ef4444;
+  --danger-strong: #b91c1c;
+  --danger-soft: #fee2e2;
+  --error: #dc2626;
+
+  /* ===== App translucent overlays ===== */
+  --alpha-black-4: rgba(0, 0, 0, 0.04);
+  --alpha-black-5: rgba(0, 0, 0, 0.05);
+  --alpha-black-6: rgba(0, 0, 0, 0.06);
+  --alpha-black-8: rgba(0, 0, 0, 0.08);
+  --alpha-black-9: rgba(0, 0, 0, 0.09);
+  --alpha-black-10: rgba(0, 0, 0, 0.1);
+  --alpha-black-12: rgba(0, 0, 0, 0.12);
+  --alpha-black-14: rgba(0, 0, 0, 0.14);
+  --alpha-black-15: rgba(0, 0, 0, 0.15);
+  --alpha-black-18: rgba(0, 0, 0, 0.18);
+  --alpha-black-20: rgba(0, 0, 0, 0.2);
+  --alpha-black-25: rgba(0, 0, 0, 0.25);
+  --alpha-black-28: rgba(0, 0, 0, 0.28);
+  --alpha-black-35: rgba(0, 0, 0, 0.35);
+  --alpha-black-50: rgba(0, 0, 0, 0.5);
+  --alpha-black-58: rgba(0, 0, 0, 0.58);
+  --alpha-black-65: rgba(0, 0, 0, 0.65);
+  --alpha-black-72: rgba(0, 0, 0, 0.72);
+  --alpha-black-78: rgba(0, 0, 0, 0.78);
+  --alpha-white-18: rgba(255, 255, 255, 0.18);
+  --alpha-white-22: rgba(255, 255, 255, 0.22);
+  --alpha-white-25: rgba(255, 255, 255, 0.25);
+  --alpha-white-28: rgba(255, 255, 255, 0.28);
+  --alpha-white-40: rgba(255, 255, 255, 0.4);
+  --alpha-white-60: rgba(255, 255, 255, 0.6);
+  --alpha-white-70: rgba(255, 255, 255, 0.7);
+
+  /* ===== App accent glows ===== */
+  --accent-timeline-glow: rgba(74, 222, 128, 0.28);
+  --accent-timeline-glow-strong: rgba(74, 222, 128, 0.45);
+  --gold-glow: rgba(217, 150, 43, 0.1);
+  --gold-chip: rgba(240, 179, 92, 0.15);
+  --gold-border: rgba(183, 121, 31, 0.35);
+
+  /* Raw black channel for dynamic alpha math */
+  --rgb-black: 0, 0, 0;
+  --block-shadow-alpha: 0.08;
+
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;

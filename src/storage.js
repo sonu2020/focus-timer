@@ -29,3 +29,24 @@ export function removeStored(key) {
     return false
   }
 }
+
+// Same wrappers for sessionStorage: the values survive a reload but are wiped
+// when the tab/browser is closed, so a fresh visit always starts clean.
+export function readSession(key, fallback = null) {
+  try {
+    const raw = sessionStorage.getItem(key)
+    return raw == null ? fallback : JSON.parse(raw)
+  } catch {
+    return fallback
+  }
+}
+
+export function writeSession(key, value) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value))
+    return true
+  } catch {
+    // storage unavailable; the session value just won't be remembered
+    return false
+  }
+}
