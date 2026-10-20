@@ -1,21 +1,49 @@
-import { useEffect, useRef, useState } from 'react'
-import { minutesOfDay, parseTime, toTimeValue } from './time'
-import './SprintModal.css'
+import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent, CSSProperties, MouseEvent } from "react";
+import { minutesOfDay, parseTime, toTimeValue } from "./time";
+import ThemeToggle from "./ThemeToggle";
+import "./SprintModal.css";
 
-const BLOCK_PRESETS = [3, 5, 10]
+const BLOCK_PRESETS = [3, 5, 10];
 
-const CUSTOM_BLOCK_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1)
+const CUSTOM_BLOCK_OPTIONS = Array.from(
+  { length: 12 },
+  (_, index) => index + 1,
+);
 
 const THEMES = [
-  { name: 'Green', value: '#52d696', border: '#2E7D56' },
-  { name: 'Orange', value: '#f59e0b', border: '#C76A13' },
-  { name: 'Red', value: '#ef4444', border: '#C0392B' },
-  { name: 'Purple', value: '#8b5cf6', border: '#6C5CE7' },
-  { name: 'Dark Gray', value: '#374151', border: '#2C3A47' },
-  { name: 'Blue', value: '#3b82f6', border: '#1d4ed8' },
-  { name: 'Yellow', value: '#facc15', border: '#b45309' },
-  { name: 'Pink', value: '#ec4899', border: '#be185d' },
-]
+  { name: "Green", value: "#52d696", border: "#2E7D56" },
+  { name: "Orange", value: "#f59e0b", border: "#C76A13" },
+  { name: "Red", value: "#ef4444", border: "#C0392B" },
+  { name: "Purple", value: "#8b5cf6", border: "#6C5CE7" },
+  { name: "Dark Gray", value: "#374151", border: "#2C3A47" },
+  { name: "Blue", value: "#3b82f6", border: "#1d4ed8" },
+  { name: "Yellow", value: "#facc15", border: "#b45309" },
+  { name: "Pink", value: "#ec4899", border: "#be185d" },
+];
+
+export interface SprintConfig {
+  startHour: number;
+  startMinute: number;
+  endHour: number;
+  endMinute: number;
+  startTime: string;
+  endTime: string;
+  length: string;
+  blockCount: number;
+  themeName: string;
+  theme: string;
+}
+
+interface SprintModalProps {
+  open: boolean;
+  mode?: "create" | "update";
+  initial?: Partial<SprintConfig>;
+  onClose: () => void;
+  onStart: (config: SprintConfig) => void;
+  onGetInviteLink?: (config: SprintConfig) => string;
+  onEnableInvite?: () => void;
+}
 
 function Caret() {
   return (
@@ -29,13 +57,13 @@ function Caret() {
         strokeLinejoin="round"
       />
     </svg>
-  )
+  );
 }
 
 // Open the browser's time picker when the field is clicked
-function openPicker(event) {
+function openPicker(event: MouseEvent<HTMLInputElement>) {
   try {
-    event.currentTarget.showPicker()
+    event.currentTarget.showPicker();
   } catch {
     // showPicker is not supported or not allowed here; typing still works
   }
@@ -43,42 +71,46 @@ function openPicker(event) {
 
 function SprintModal({
   open,
-  mode = 'create',
+  mode = "create",
   initial,
   onClose,
   onStart,
   onGetInviteLink,
   onEnableInvite,
-}) {
-  const isUpdate = mode === 'update'
+}: SprintModalProps) {
+  const isUpdate = mode === "update";
 
-  const [startTime, setStartTime] = useState(
+  const [startTime, setStartTime] = useState<string>(
     initial?.startTime ??
-      toTimeValue(minutesOfDay(initial?.startHour ?? 9, initial?.startMinute ?? 0)),
-  )
-  const [endTime, setEndTime] = useState(
+      toTimeValue(
+        minutesOfDay(initial?.startHour ?? 9, initial?.startMinute ?? 0),
+      ),
+  );
+  const [endTime, setEndTime] = useState<string>(
     initial?.endTime ??
-      toTimeValue(minutesOfDay(initial?.endHour ?? 19, initial?.endMinute ?? 0)),
-  )
-  const [error, setError] = useState('')
-  const [length, setLength] = useState(initial?.length ?? '10')
-  const [customBlocks, setCustomBlocks] = useState(
-    initial?.length === 'Customize' ? (initial.blockCount ?? 6) : 6,
-  )
-  const [theme, setTheme] = useState(initial?.themeName ?? 'Green')
+      toTimeValue(
+        minutesOfDay(initial?.endHour ?? 19, initial?.endMinute ?? 0),
+      ),
+  );
+  const [error, setError] = useState("");
+  const [length, setLength] = useState<string>(initial?.length ?? "10");
+  const [customBlocks, setCustomBlocks] = useState<number>(
+    initial?.length === "Customize" ? (initial.blockCount ?? 6) : 6,
+  );
+  const [theme, setTheme] = useState<string>(initial?.themeName ?? "Green");
 
   // Optional invite: a shareable link that recreates this sprint
-  const [invite, setInvite] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const linkInputRef = useRef(null)
+  const [invite, setInvite] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const linkInputRef = useRef<HTMLInputElement>(null);
 
-  const blockCount = length === 'Customize' ? customBlocks : Number(length)
+  const blockCount = length === "Customize" ? customBlocks : Number(length);
 
   // Reads the settings as they currently stand in the modal
-  function currentConfig() {
-    const start = parseTime(startTime)
-    const end = parseTime(endTime)
-    const selected = THEMES.find((item) => item.name === theme)
+  function currentConfig(): SprintConfig {
+    const start = parseTime(startTime);
+    const end = parseTime(endTime);
+    const selected = THEMES.find((item) => item.name === theme);
 
     return {
       startHour: start?.hour ?? 9,
@@ -90,106 +122,106 @@ function SprintModal({
       length,
       blockCount,
       themeName: theme,
-      theme: selected ? selected.value : '#52d696',
-    }
+      theme: selected ? selected.value : "#52d696",
+    };
   }
 
   // Regenerated on every change so the link always matches the current setup
   const shareLink =
-    invite && typeof onGetInviteLink === 'function'
+    invite && typeof onGetInviteLink === "function"
       ? onGetInviteLink(currentConfig())
-      : ''
+      : "";
 
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
 
-    function onKeyDown(event) {
-      if (event.key === 'Escape') onClose()
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
     }
 
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [open, onClose])
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
 
   // Drop the "Copied!" confirmation after a moment
   useEffect(() => {
-    if (!copied) return
+    if (!copied) return;
 
-    const timer = setTimeout(() => setCopied(false), 2500)
-    return () => clearTimeout(timer)
-  }, [copied])
+    const timer = setTimeout(() => setCopied(false), 2500);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
-  function changeStart(event) {
-    setStartTime(event.target.value)
-    setError('')
+  function changeStart(event: ChangeEvent<HTMLInputElement>) {
+    setStartTime(event.target.value);
+    setError("");
   }
 
-  function changeEnd(event) {
-    setEndTime(event.target.value)
-    setError('')
+  function changeEnd(event: ChangeEvent<HTMLInputElement>) {
+    setEndTime(event.target.value);
+    setError("");
   }
 
   // Copies the shareable link, with a fallback for browsers that block
   // the async clipboard API
   async function copyShareLink() {
-    if (!shareLink) return
+    if (!shareLink) return;
 
     try {
-      await navigator.clipboard.writeText(shareLink)
-      setCopied(true)
-      setError('')
-      return
+      await navigator.clipboard.writeText(shareLink);
+      setCopied(true);
+      setError("");
+      return;
     } catch {
       // Fall through to the manual selection fallback below
     }
 
-    const input = linkInputRef.current
-    input?.focus()
-    input?.select()
+    const input = linkInputRef.current;
+    input?.focus();
+    input?.select();
 
-    let copiedBySelection = false
+    let copiedBySelection = false;
 
     try {
-      copiedBySelection = document.execCommand('copy')
+      copiedBySelection = document.execCommand("copy");
     } catch {
-      copiedBySelection = false
+      copiedBySelection = false;
     }
 
     if (copiedBySelection) {
-      setCopied(true)
-      setError('')
+      setCopied(true);
+      setError("");
     } else {
-      setError('Copying was blocked. Select the link and copy it manually.')
+      setError("Copying was blocked. Select the link and copy it manually.");
     }
   }
 
   function handleStart() {
-    const start = parseTime(startTime)
-    const end = parseTime(endTime)
+    const start = parseTime(startTime);
+    const end = parseTime(endTime);
 
     if (!start || !end) {
-      setError('Please enter both a start and an end time.')
-      return
+      setError("Please enter both a start and an end time.");
+      return;
     }
 
     if (end.hour * 60 + end.minute <= start.hour * 60 + start.minute) {
-      setError('The end time must be after the start time.')
-      return
+      setError("The end time must be after the start time.");
+      return;
     }
 
-    onStart(currentConfig())
+    onStart(currentConfig());
   }
 
-  function toggleInvite(checked) {
-    setInvite(checked)
-    setCopied(false)
-    setError('')
+  function toggleInvite(checked: boolean) {
+    setInvite(checked);
+    setCopied(false);
+    setError("");
 
     // Create/join the shared room so the link we show has a room id
-    if (checked) onEnableInvite?.()
+    if (checked) onEnableInvite?.();
   }
 
-  if (!open) return null
+  if (!open) return null;
 
   return (
     <div className="sprint-modal" role="presentation" onClick={onClose}>
@@ -217,10 +249,13 @@ function SprintModal({
           </svg>
         </button>
 
-        <h2 id="sprint-modal-title" className="sprint-modal__title">
-          {isUpdate ? 'Update your sprint' : 'Create a Sprint'}
-        </h2>
+        <div className="sprint-modal__theme">
+          <ThemeToggle />
+        </div>
 
+        <h2 id="sprint-modal-title" className="sprint-modal__title">
+          {isUpdate ? "Update your sprint" : "Create a Sprint"}
+        </h2>
         <div className="sprint-modal__field">
           <label className="sprint-modal__label" htmlFor="sprint-start">
             When does your day start?
@@ -269,7 +304,9 @@ function SprintModal({
                 key={option}
                 type="button"
                 className={`sprint-modal__segment${
-                  length === String(option) ? ' sprint-modal__segment--active' : ''
+                  length === String(option)
+                    ? " sprint-modal__segment--active"
+                    : ""
                 }`}
                 onClick={() => setLength(String(option))}
               >
@@ -279,12 +316,12 @@ function SprintModal({
 
             <select
               className={`sprint-modal__segment sprint-modal__segment--select${
-                length === 'Customize' ? ' sprint-modal__segment--active' : ''
+                length === "Customize" ? " sprint-modal__segment--active" : ""
               }`}
-              value={length === 'Customize' ? String(customBlocks) : ''}
+              value={length === "Customize" ? String(customBlocks) : ""}
               onChange={(event) => {
-                setLength('Customize')
-                setCustomBlocks(Number(event.target.value))
+                setLength("Customize");
+                setCustomBlocks(Number(event.target.value));
               }}
               aria-label="Custom block count"
             >
@@ -309,9 +346,14 @@ function SprintModal({
                 key={item.name}
                 type="button"
                 className={`sprint-modal__swatch${
-                  theme === item.name ? ' sprint-modal__swatch--active' : ''
+                  theme === item.name ? " sprint-modal__swatch--active" : ""
                 }`}
-                style={{ '--swatch': item.value, '--swatch-border': item.border }}
+                style={
+                  {
+                    "--swatch": item.value,
+                    "--swatch-border": item.border,
+                  } as CSSProperties
+                }
                 onClick={() => setTheme(item.name)}
                 aria-label={item.name}
                 aria-pressed={theme === item.name}
@@ -347,18 +389,18 @@ function SprintModal({
                 <button
                   type="button"
                   className={`sprint-modal__copy${
-                    copied ? ' sprint-modal__copy--copied' : ''
+                    copied ? " sprint-modal__copy--copied" : ""
                   }`}
                   onClick={copyShareLink}
                 >
-                  {copied ? 'Copied!' : 'Copy link'}
+                  {copied ? "Copied!" : "Copy link"}
                 </button>
               </div>
 
               <p className="sprint-modal__invite-status" role="status">
                 {copied
-                  ? 'Link copied to your clipboard.'
-                  : 'Share this link so a teammate can open the same sprint.'}
+                  ? "Link copied to your clipboard."
+                  : "Share this link so a teammate can open the same sprint."}
               </p>
             </div>
           )}
@@ -369,12 +411,12 @@ function SprintModal({
           className="sprint-modal__submit"
           onClick={handleStart}
         >
-          {isUpdate ? 'Save Changes' : 'Start Now'}
+          {isUpdate ? "Save Changes" : "Start Now"}
           <Caret />
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default SprintModal
+export default SprintModal;

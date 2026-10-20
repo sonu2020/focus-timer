@@ -1,11 +1,22 @@
-import { formatToday } from './time'
-import './Header.css'
+import { formatToday } from "./time";
+import "./Header.css";
 // import AmbienceMenu from './AmbienceMenu'
 
-const LIVE_LABELS = {
-  online: 'Live',
-  connecting: 'Connecting',
-  offline: 'Offline',
+type TeamStatus = "online" | "connecting" | "offline";
+
+const LIVE_LABELS: Record<TeamStatus, string> = {
+  online: "Live",
+  connecting: "Connecting",
+  offline: "Offline",
+};
+
+interface HeaderProps {
+  onStart: () => void;
+  todoOpen: boolean;
+  todoCount: number;
+  onToggleTodos: () => void;
+  collaborating: boolean;
+  teamStatus: TeamStatus;
 }
 
 function Header({
@@ -15,8 +26,8 @@ function Header({
   onToggleTodos,
   collaborating,
   teamStatus,
-}) {
-  const { day, monthYear } = formatToday()
+}: HeaderProps) {
+  const { day, monthYear } = formatToday();
 
   return (
     <header className="app-header">
@@ -30,10 +41,10 @@ function Header({
           <span
             className={`app-header__live app-header__live--${teamStatus}`}
             role="status"
-            title={`Sprint sync: ${LIVE_LABELS[teamStatus] ?? 'Offline'}`}
+            title={`Sprint sync: ${LIVE_LABELS[teamStatus] ?? "Offline"}`}
           >
             <span className="app-header__live-dot" aria-hidden="true" />
-            {LIVE_LABELS[teamStatus] ?? 'Offline'}
+            {LIVE_LABELS[teamStatus] ?? "Offline"}
           </span>
         )}
 
@@ -74,7 +85,7 @@ function Header({
         </div>
       </div>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;

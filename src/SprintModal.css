@@ -323,7 +323,15 @@
   text-align: left;
   color: var(--gray-450);
 }
+.sprint-modal__theme {
+  position: absolute;
+  top: 30px;
+  right: 25px;
+}
 
+.sprint-modal__top .sprint-modal__title {
+  margin: 0;
+}
 @media (max-width: 420px) {
   .sprint-modal__segments {
     grid-template-columns: repeat(2, minmax(0, 1fr));
