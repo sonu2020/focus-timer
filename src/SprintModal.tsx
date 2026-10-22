@@ -253,167 +253,171 @@ function SprintModal({
           <ThemeToggle />
         </div>
 
-        <h2 id="sprint-modal-title" className="sprint-modal__title">
-          {isUpdate ? "Update your sprint" : "Create a Sprint"}
-        </h2>
-        <div className="sprint-modal__field">
-          <label className="sprint-modal__label" htmlFor="sprint-start">
-            When does your day start?
-          </label>
-          <input
-            id="sprint-start"
-            className="sprint-modal__time"
-            type="time"
-            value={startTime}
-            onChange={changeStart}
-            onClick={openPicker}
-            required
-          />
-        </div>
+        <div className="sprint-modal__body">
+          <h2 id="sprint-modal-title" className="sprint-modal__title">
+            {isUpdate ? "Update your sprint" : "Create a Sprint"}
+          </h2>
+          <div className="sprint-modal__field">
+            <label className="sprint-modal__label" htmlFor="sprint-start">
+              When does your day start?
+            </label>
+            <input
+              id="sprint-start"
+              className="sprint-modal__time"
+              type="time"
+              value={startTime}
+              onChange={changeStart}
+              onClick={openPicker}
+              required
+            />
+          </div>
 
-        <div className="sprint-modal__field">
-          <label className="sprint-modal__label" htmlFor="sprint-end">
-            When does your day end?
-          </label>
-          <input
-            id="sprint-end"
-            className="sprint-modal__time"
-            type="time"
-            value={endTime}
-            onChange={changeEnd}
-            onClick={openPicker}
-            required
-          />
-        </div>
+          <div className="sprint-modal__field">
+            <label className="sprint-modal__label" htmlFor="sprint-end">
+              When does your day end?
+            </label>
+            <input
+              id="sprint-end"
+              className="sprint-modal__time"
+              type="time"
+              value={endTime}
+              onChange={changeEnd}
+              onClick={openPicker}
+              required
+            />
+          </div>
 
-        <p className="sprint-modal__hint">
-          Click the field or type a time, like 10:14.
-        </p>
-
-        {error && (
-          <p className="sprint-modal__error" role="alert">
-            {error}
+          <p className="sprint-modal__hint">
+            Click the field or type a time, like 10:14.
           </p>
-        )}
 
-        <div className="sprint-modal__field">
-          <span className="sprint-modal__label">How long is the sprint?</span>
-          <div className="sprint-modal__segments" role="group">
-            {BLOCK_PRESETS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={`sprint-modal__segment${
-                  length === String(option)
+          {error && (
+            <p className="sprint-modal__error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="sprint-modal__field">
+            <span className="sprint-modal__label">How long is the sprint?</span>
+            <div className="sprint-modal__segments" role="group">
+              {BLOCK_PRESETS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={`sprint-modal__segment${
+                    length === String(option)
+                      ? " sprint-modal__segment--active"
+                      : ""
+                  }`}
+                  onClick={() => setLength(String(option))}
+                >
+                  {option}
+                </button>
+              ))}
+
+              <select
+                className={`sprint-modal__segment sprint-modal__segment--select${
+                  length === "Customize"
                     ? " sprint-modal__segment--active"
                     : ""
                 }`}
-                onClick={() => setLength(String(option))}
+                value={length === "Customize" ? String(customBlocks) : ""}
+                onChange={(event) => {
+                  setLength("Customize");
+                  setCustomBlocks(Number(event.target.value));
+                }}
+                aria-label="Custom block count"
               >
-                {option}
-              </button>
-            ))}
-
-            <select
-              className={`sprint-modal__segment sprint-modal__segment--select${
-                length === "Customize" ? " sprint-modal__segment--active" : ""
-              }`}
-              value={length === "Customize" ? String(customBlocks) : ""}
-              onChange={(event) => {
-                setLength("Customize");
-                setCustomBlocks(Number(event.target.value));
-              }}
-              aria-label="Custom block count"
-            >
-              <option value="" disabled>
-                Customize
-              </option>
-
-              {CUSTOM_BLOCK_OPTIONS.map((count) => (
-                <option key={count} value={count}>
-                  {count}
+                <option value="" disabled>
+                  Customize
                 </option>
-              ))}
-            </select>
-          </div>
-        </div>
 
-        <div className="sprint-modal__field">
-          <span className="sprint-modal__label">Choose your sprint theme</span>
-          <div className="sprint-modal__swatches" role="group">
-            {THEMES.map((item) => (
-              <button
-                key={item.name}
-                type="button"
-                className={`sprint-modal__swatch${
-                  theme === item.name ? " sprint-modal__swatch--active" : ""
-                }`}
-                style={
-                  {
-                    "--swatch": item.value,
-                    "--swatch-border": item.border,
-                  } as CSSProperties
-                }
-                onClick={() => setTheme(item.name)}
-                aria-label={item.name}
-                aria-pressed={theme === item.name}
-                title={item.name}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="sprint-modal__field">
-          <label className="sprint-modal__invite-toggle">
-            <input
-              type="checkbox"
-              checked={invite}
-              onChange={(event) => toggleInvite(event.target.checked)}
-            />
-            <span>Invite a teammate to this sprint (optional)</span>
-          </label>
-
-          {invite && (
-            <div className="sprint-modal__invite">
-              <div className="sprint-modal__invite-row">
-                <input
-                  ref={linkInputRef}
-                  className="sprint-modal__link"
-                  type="text"
-                  value={shareLink}
-                  readOnly
-                  aria-label="Shareable sprint link"
-                  onFocus={(event) => event.currentTarget.select()}
-                />
-
-                <button
-                  type="button"
-                  className={`sprint-modal__copy${
-                    copied ? " sprint-modal__copy--copied" : ""
-                  }`}
-                  onClick={copyShareLink}
-                >
-                  {copied ? "Copied!" : "Copy link"}
-                </button>
-              </div>
-
-              <p className="sprint-modal__invite-status" role="status">
-                {copied
-                  ? "Link copied to your clipboard."
-                  : "Share this link so a teammate can open the same sprint."}
-              </p>
+                {CUSTOM_BLOCK_OPTIONS.map((count) => (
+                  <option key={count} value={count}>
+                    {count}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
-        </div>
+          </div>
 
-        <button
-          type="button"
-          className="sprint-modal__submit"
-          onClick={handleStart}
-        >
-          {isUpdate ? "Save Changes" : "Start Now"}
-          <Caret />
-        </button>
+          <div className="sprint-modal__field">
+            <span className="sprint-modal__label">Choose your sprint theme</span>
+            <div className="sprint-modal__swatches" role="group">
+              {THEMES.map((item) => (
+                <button
+                  key={item.name}
+                  type="button"
+                  className={`sprint-modal__swatch${
+                    theme === item.name ? " sprint-modal__swatch--active" : ""
+                  }`}
+                  style={
+                    {
+                      "--swatch": item.value,
+                      "--swatch-border": item.border,
+                    } as CSSProperties
+                  }
+                  onClick={() => setTheme(item.name)}
+                  aria-label={item.name}
+                  aria-pressed={theme === item.name}
+                  title={item.name}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="sprint-modal__field">
+            <label className="sprint-modal__invite-toggle">
+              <input
+                type="checkbox"
+                checked={invite}
+                onChange={(event) => toggleInvite(event.target.checked)}
+              />
+              <span>Invite a teammate to this sprint (optional)</span>
+            </label>
+
+            {invite && (
+              <div className="sprint-modal__invite">
+                <div className="sprint-modal__invite-row">
+                  <input
+                    ref={linkInputRef}
+                    className="sprint-modal__link"
+                    type="text"
+                    value={shareLink}
+                    readOnly
+                    aria-label="Shareable sprint link"
+                    onFocus={(event) => event.currentTarget.select()}
+                  />
+
+                  <button
+                    type="button"
+                    className={`sprint-modal__copy${
+                      copied ? " sprint-modal__copy--copied" : ""
+                    }`}
+                    onClick={copyShareLink}
+                  >
+                    {copied ? "Copied!" : "Copy link"}
+                  </button>
+                </div>
+
+                <p className="sprint-modal__invite-status" role="status">
+                  {copied
+                    ? "Link copied to your clipboard."
+                    : "Share this link so a teammate can open the same sprint."}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="sprint-modal__submit"
+            onClick={handleStart}
+          >
+            {isUpdate ? "Save Changes" : "Start Now"}
+            <Caret />
+          </button>
+        </div>
       </div>
     </div>
   );
