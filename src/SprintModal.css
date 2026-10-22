@@ -332,17 +332,62 @@
 .sprint-modal__top .sprint-modal__title {
   margin: 0;
 }
+@media (max-width: 639px) {
+  .sprint-modal {
+    padding: 0 16px;
+  }
+
+  .sprint-modal__dialog {
+    gap: 12px;
+    margin-block: 16px;
+    padding: 16px;
+  }
+
+  .sprint-modal__title {
+    font-size: 20px;
+  }
+
+  .sprint-modal__label {
+    margin-bottom: 4px;
+  }
+
+  .sprint-modal__theme {
+    top: 14px;
+    right: 14px;
+  }
+
+  .sprint-modal__swatches {
+    gap: 8px;
+  }
+
+  .sprint-modal__invite {
+    margin-top: 8px;
+  }
+
+  .sprint-modal__link {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .sprint-modal__copy {
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .sprint-modal__invite-status {
+    margin-top: 6px;
+    font-size: 11px;
+  }
+
+  .sprint-modal__submit {
+    align-self: stretch;
+    width: 100%;
+    padding: 10px 16px;
+  }
+}
+
 @media (max-width: 420px) {
   .sprint-modal__segments {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .sprint-modal__invite-row {
-    flex-wrap: wrap;
-  }
-
-  .sprint-modal__link,
-  .sprint-modal__copy {
-    width: 100%;
   }
 }
