@@ -200,8 +200,60 @@
   color: inherit;
   cursor: pointer;
 }
-@media (max-width: 480px) {
+@media (max-width: 639px) {
   .app-header {
-    padding: 0 16px;
+    height: auto;
+    padding: 14px 16px;
+  }
+
+  .app-header__inner {
+    display: grid;
+    grid-template-areas:
+      "date status"
+      "actions actions";
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .app-header__date {
+    grid-area: date;
+  }
+
+  .app-header__live {
+    grid-area: status;
+    justify-self: end;
+  }
+
+  .app-header__actions {
+    grid-area: actions;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .app-header__todo,
+  .app-header__start {
+    justify-content: center;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .app-header__todo {
+    gap: 6px;
+  }
+
+  .app-header__todo-icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  .app-header__todo-count {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 11px;
   }
 }

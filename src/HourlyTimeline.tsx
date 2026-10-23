@@ -266,6 +266,18 @@ function HourlyTimeline({
   return (
     <div className={`timeline-shell${todosOpen ? ' timeline-shell--open' : ''}`}>
       <section className="hourly-timeline" aria-label="Hourly timeline">
+        {countdown && (
+          <span
+            className={`hourly-timeline__countdown${
+              countdown.critical ? ' hourly-timeline__countdown--critical' : ''
+            }`}
+            role="timer"
+            aria-label={`${countdown.text} left in this block`}
+          >
+            {countdown.text}
+          </span>
+        )}
+
         <span className="hourly-timeline__edge hourly-timeline__edge--start">
           {formatMinuteLabel(startMin)}
         </span>
@@ -298,18 +310,6 @@ function HourlyTimeline({
         </div>
 
         <span className="hourly-timeline__edge hourly-timeline__edge--end">
-          {countdown && (
-            <span
-              className={`hourly-timeline__countdown${
-                countdown.critical ? ' hourly-timeline__countdown--critical' : ''
-              }`}
-              role="timer"
-              aria-label={`${countdown.text} left in this block`}
-            >
-              {countdown.text}
-            </span>
-          )}
-
           {formatMinuteLabel(endMin)}
         </span>
 

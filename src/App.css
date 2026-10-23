@@ -504,6 +504,10 @@ button:active {
 }
 
 @media (max-width: 720px) {
+  .content--timeline {
+    margin-top: 8px;
+  }
+
   .timeline-controls {
     gap: 10px 16px;
     margin-bottom: 8px;
