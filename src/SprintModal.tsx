@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, MouseEvent } from "react";
-import { minutesOfDay, parseTime, toTimeValue } from "./time";
+import {
+  hasSprintStarted,
+  minutesOfDay,
+  parseTime,
+  toTimeValue,
+} from "./time";
 import ThemeToggle from "./ThemeToggle";
 import "./SprintModal.css";
 
@@ -41,8 +46,8 @@ interface SprintModalProps {
   initial?: Partial<SprintConfig>;
   onClose: () => void;
   onStart: (config: SprintConfig) => void;
-  onGetInviteLink?: (config: SprintConfig) => string;
-  onEnableInvite?: () => void;
+  onGetInviteLink?: (config: SprintConfig, teamId?: string) => string;
+  onEnableInvite?: () => string | undefined;
 }
 
 function Caret() {
@@ -99,8 +104,7 @@ function SprintModal({
   );
   const [theme, setTheme] = useState<string>(initial?.themeName ?? "Green");
 
-  // Optional invite: a shareable link that recreates this sprint
-  const [invite, setInvite] = useState(false);
+  // A shareable link that recreates this sprint and opens its room
   const [copied, setCopied] = useState(false);
   const linkInputRef = useRef<HTMLInputElement>(null);
 
@@ -128,7 +132,7 @@ function SprintModal({
 
   // Regenerated on every change so the link always matches the current setup
   const shareLink =
-    invite && typeof onGetInviteLink === "function"
+    typeof onGetInviteLink === "function"
       ? onGetInviteLink(currentConfig())
       : "";
 
@@ -161,13 +165,23 @@ function SprintModal({
     setError("");
   }
 
+  // Creates or reuses the shared room as soon as the visitor shows intent to
+  // share, so both the visible link and the copied link include the room id.
+  function prepareShareLink() {
+    const teamId = onEnableInvite?.();
+    const config = currentConfig();
+
+    return onGetInviteLink?.(config, teamId) ?? shareLink;
+  }
+
   // Copies the shareable link, with a fallback for browsers that block
   // the async clipboard API
   async function copyShareLink() {
-    if (!shareLink) return;
+    const link = prepareShareLink();
+    if (!link) return;
 
     try {
-      await navigator.clipboard.writeText(shareLink);
+      await navigator.clipboard.writeText(link);
       setCopied(true);
       setError("");
       return;
@@ -176,8 +190,12 @@ function SprintModal({
     }
 
     const input = linkInputRef.current;
-    input?.focus();
-    input?.select();
+
+    if (input) {
+      input.value = link;
+      input.focus();
+      input.select();
+    }
 
     let copiedBySelection = false;
 
@@ -209,16 +227,18 @@ function SprintModal({
       return;
     }
 
+    if (
+      !hasSprintStarted({ startHour: start.hour, startMinute: start.minute })
+    ) {
+      setError(
+        `This sprint starts at ${toTimeValue(
+          minutesOfDay(start.hour, start.minute),
+        )}. You can open it once that time arrives.`,
+      );
+      return;
+    }
+
     onStart(currentConfig());
-  }
-
-  function toggleInvite(checked: boolean) {
-    setInvite(checked);
-    setCopied(false);
-    setError("");
-
-    // Create/join the shared room so the link we show has a room id
-    if (checked) onEnableInvite?.();
   }
 
   if (!open) return null;
@@ -364,46 +384,41 @@ function SprintModal({
         </div>
 
         <div className="sprint-modal__field">
-          <label className="sprint-modal__invite-toggle">
-            <input
-              type="checkbox"
-              checked={invite}
-              onChange={(event) => toggleInvite(event.target.checked)}
-            />
-            <span>Invite a teammate to this sprint (optional)</span>
-          </label>
+          <span className="sprint-modal__label">Share this sprint</span>
 
-          {invite && (
-            <div className="sprint-modal__invite">
-              <div className="sprint-modal__invite-row">
-                <input
-                  ref={linkInputRef}
-                  className="sprint-modal__link"
-                  type="text"
-                  value={shareLink}
-                  readOnly
-                  aria-label="Shareable sprint link"
-                  onFocus={(event) => event.currentTarget.select()}
-                />
+          <div className="sprint-modal__invite">
+            <div className="sprint-modal__invite-row">
+              <input
+                ref={linkInputRef}
+                className="sprint-modal__link"
+                type="text"
+                value={shareLink}
+                readOnly
+                aria-label="Shareable sprint link"
+                onFocus={(event) => {
+                  const link = prepareShareLink();
+                  event.currentTarget.value = link;
+                  event.currentTarget.select();
+                }}
+              />
 
-                <button
-                  type="button"
-                  className={`sprint-modal__copy${
-                    copied ? " sprint-modal__copy--copied" : ""
-                  }`}
-                  onClick={copyShareLink}
-                >
-                  {copied ? "Copied!" : "Copy link"}
-                </button>
-              </div>
-
-              <p className="sprint-modal__invite-status" role="status">
-                {copied
-                  ? "Link copied to your clipboard."
-                  : "Share this link so a teammate can open the same sprint."}
-              </p>
+              <button
+                type="button"
+                className={`sprint-modal__copy${
+                  copied ? " sprint-modal__copy--copied" : ""
+                }`}
+                onClick={copyShareLink}
+              >
+                {copied ? "Copied!" : "Copy link"}
+              </button>
             </div>
-          )}
+
+            <p className="sprint-modal__invite-status" role="status">
+              {copied
+                ? "Link copied to your clipboard."
+                : "Share this link so a teammate can open the same sprint."}
+            </p>
+          </div>
         </div>
 
         <button

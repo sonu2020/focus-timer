@@ -17,6 +17,7 @@ import {
 } from './useTeamRoom'
 import { getSprintLink, readSharedSprint } from './sprintShare'
 import { readSession, writeSession } from './storage'
+import { hasSprintStarted } from './time'
 import { requestNotificationPermission, unlockBlockAudio } from './blockAlerts'
 
 const labels = {
@@ -83,27 +84,38 @@ function App() {
   const [secondsLeft, setSecondsLeft] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
   const [completed, setCompleted] = useState(0)
-  // A sprint carried in the URL (?sprint=...) opens straight away
+  // A sprint carried in the URL (?sprint=...) is loaded on first render
   const [sharedSprint] = useState(readSharedSprint)
   const [incomingTeam] = useState(readInviteTeam)
-  // A shared link opens the timeline straight away. Otherwise the view is
-  // restored from this session only, so a reload keeps it but a fresh visit
-  // (new tab/browser) always starts at home.
+  // A shared link opens the timeline only once its start time has arrived.
+  // Otherwise the view is restored from this session, so a reload keeps it but
+  // a fresh visit always starts at home.
   const [viewMode, setViewMode] = useState(() => {
-    if (sharedSprint) return 'timeline'
+    if (sharedSprint) {
+      return hasSprintStarted(sharedSprint) ? 'timeline' : 'home'
+    }
 
-    return readSession(VIEW_STORAGE_KEY) === 'timeline' ? 'timeline' : 'home'
+    if (incomingTeam) return 'home'
+    if (readSession(VIEW_STORAGE_KEY) !== 'timeline') return 'home'
+
+    const savedSprint = readSavedSprint()
+    return savedSprint && hasSprintStarted(savedSprint) ? 'timeline' : 'home'
   })
   const [scrollLocked, setScrollLocked] = useState(true)
   const [aboutVisible, setAboutVisible] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState('create')
+  const draftTeamIdRef = useRef(null)
   // Settings used to prefill the sprint modal: the shared sprint, then the
-  // saved one, then the defaults.
-  const [localSprintConfig, setLocalSprintConfig] = useState(
-    () => sharedSprint ?? readSavedSprint() ?? DEFAULT_SPRINT,
+  // saved one, then the defaults. A shared link never inherits another tab's
+  // sprint or task state.
+  const [localSprintConfig, setLocalSprintConfig] = useState(() =>
+    sharedSprint ??
+    (incomingTeam ? DEFAULT_SPRINT : (readSavedSprint() ?? DEFAULT_SPRINT)),
   )
-  const [localTodos, setLocalTodos] = useState(readSavedTodos)
+  const [localTodos, setLocalTodos] = useState(() =>
+    incomingTeam ? [] : readSavedTodos(),
+  )
   const [todosOpen, setTodosOpen] = useState(false)
   const [sprintEnded, setSprintEnded] = useState(false)
   const [identity, setIdentity] = useState(() => {
@@ -112,7 +124,7 @@ function App() {
 
     if (!incomingTeam || saved?.teamId === incomingTeam) return saved
 
-    const nextIdentity = { email: saved?.email ?? '', teamId: incomingTeam }
+    const nextIdentity = { teamId: incomingTeam }
     saveIdentity(nextIdentity)
     return nextIdentity
   })
@@ -141,18 +153,47 @@ function App() {
     if (sharedSprint) saveSprintConfig(sharedSprint)
   }, [sharedSprint])
 
+  // A shared link starts from its own state, never tasks or a sprint left
+  // behind in this tab
+  useEffect(() => {
+    if (!incomingTeam) return
+
+    writeSession(TODOS_STORAGE_KEY, [])
+
+    if (!sharedSprint) {
+      writeSession(SPRINT_STORAGE_KEY, null)
+    }
+  }, [incomingTeam, sharedSprint])
+
   // Keep this session's view so a reload returns to it; closing the tab clears it
   useEffect(() => {
     writeSession(VIEW_STORAGE_KEY, viewMode)
   }, [viewMode])
 
+  // A shared link opened early waits for its start time, then opens itself
+  useEffect(() => {
+    if (!sharedSprint || viewMode !== 'home') return
+
+    const now = new Date()
+    const start = new Date(now)
+    start.setHours(sharedSprint.startHour, sharedSprint.startMinute, 0, 0)
+
+    const delay = start.getTime() - now.getTime()
+    if (!Number.isFinite(delay) || delay <= 0) return
+
+    const timer = setTimeout(() => {
+      if (hasSprintStarted(sharedSprint)) setViewMode('timeline')
+    }, delay)
+
+    return () => clearTimeout(timer)
+  }, [sharedSprint, viewMode])
+
   // Drop the share params from the address bar once they've been handled
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (!params.has('team') && !params.has('join') && !params.has('sprint')) return
+    if (!params.has('team') && !params.has('sprint')) return
 
     params.delete('team')
-    params.delete('join')
     params.delete('sprint')
 
     const query = params.toString()
@@ -167,7 +208,6 @@ function App() {
   // settings; otherwise everything stays local to this browser.
   const collab = useTeamRoom({
     teamId: identity?.teamId,
-    email: identity?.email,
     enabled: inTeam,
   })
 
@@ -325,25 +365,39 @@ function App() {
 
   function openModal(nextModalMode = 'create') {
     setModalMode(nextModalMode)
+    draftTeamIdRef.current =
+      nextModalMode === 'create' ? generateTeamId() : null
     setIsModalOpen(true)
   }
 
   function closeModal() {
+    draftTeamIdRef.current = null
     setIsModalOpen(false)
   }
 
   // Turns a solo visitor into a shared room the moment they offer to invite
-  // someone, so the link they copy carries a room everyone can join
+  // someone, so the link they copy carries a room everyone can join. A new
+  // sprint always gets its own room; an existing sprint reuses its current one.
   function enableInvite() {
-    if (identity?.teamId) {
-      // Re-activate a room this browser already belongs to
-      markTeamActive(identity.teamId)
-      setTeamActive(true)
-      return identity.teamId
+    let teamId = identity?.teamId
+
+    if (modalMode === 'create') {
+      if (!draftTeamIdRef.current) {
+        draftTeamIdRef.current = generateTeamId()
+      }
+      teamId = draftTeamIdRef.current
+    } else if (!teamId) {
+      teamId = generateTeamId()
     }
 
-    const teamId = generateTeamId()
-    const nextIdentity = { email: identity?.email ?? '', teamId }
+    if (identity?.teamId === teamId) {
+      // Re-activate a room this browser already belongs to
+      markTeamActive(teamId)
+      setTeamActive(true)
+      return teamId
+    }
+
+    const nextIdentity = { teamId }
 
     // Seed the room's cache with the tasks and sprint we already have
     writeTeamCache(teamId, { todos: localTodos, config: localSprintConfig })
@@ -355,9 +409,12 @@ function App() {
     return teamId
   }
 
-  // Builds the shareable link, tied to the shared room when there is one
-  function getShareLink(config) {
-    return getSprintLink(config, identity?.teamId)
+  // Builds the shareable link, tied to the sprint's own room
+  function getShareLink(
+    config,
+    teamId = draftTeamIdRef.current ?? identity?.teamId,
+  ) {
+    return getSprintLink(config, teamId)
   }
 
   // Saves the chosen settings; the timeline then follows the chosen clock times
@@ -365,17 +422,41 @@ function App() {
     requestNotificationPermission()
 
     const next = { ...DEFAULT_SPRINT, ...form }
+    if (!hasSprintStarted(next)) return
+
+    const isNewSprint = modalMode === 'create'
+    let nextInTeam = inTeam
+
+    // Every new sprint is bound to a fresh room. If it was shared from the
+    // modal that room is already live; otherwise keep it dormant until shared.
+    if (isNewSprint) {
+      const teamId = draftTeamIdRef.current ?? generateTeamId()
+      draftTeamIdRef.current = null
+
+      if (identity?.teamId === teamId) {
+        nextInTeam = teamActive
+      } else {
+        const nextIdentity = { teamId }
+        writeTeamCache(teamId, { todos: [], config: next })
+        saveIdentity(nextIdentity)
+        markTeamActive('')
+        setIdentity(nextIdentity)
+        setTeamActive(false)
+        nextInTeam = false
+      }
+    }
+
     setLocalSprintConfig(next)
 
     // A brand-new sprint starts with a clean task list
-    if (modalMode === 'create') {
+    if (isNewSprint) {
       setLocalTodos([])
       writeSession(TODOS_STORAGE_KEY, [])
 
-      if (inTeam) setTeamTodos([])
+      if (nextInTeam) setTeamTodos([])
     }
 
-    if (inTeam) {
+    if (nextInTeam) {
       // Store the shared sprint right away; queue a resend if the socket is down
       setTeamConfig(next)
 

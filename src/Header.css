@@ -162,32 +162,6 @@
   color: var(--white);
 }
 
-.app-header__actions .music-menu {
-  position: relative;
-  display: flex;
-}
-
-.app-header__actions .music-button {
-  padding: 0 16px;
-  border: 0;
-  border-left: 1px solid var(--alpha-white-28);
-  border-radius: 0 8px 8px 0;
-  background: var(--black);
-  color: var(--white);
-  font-size: 17px;
-  line-height: 1;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-.app-header__actions .music-button:hover {
-  background: var(--gray-850);
-  transform: none;
-}
-
-.app-header__actions .music-button.is-active {
-  background: var(--gray-800);
-}
 .app-header__theme {
   display: flex;
   align-items: center;

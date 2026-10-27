@@ -37,6 +37,16 @@ export function parseTime(value) {
   return { hour, minute }
 }
 
+// Whether the current clock time has reached the sprint's start time
+export function hasSprintStarted(config, now = new Date()) {
+  if (!config) return false
+
+  const start = minutesOfDay(config.startHour, config.startMinute)
+  const current = minutesOfDay(now.getHours(), now.getMinutes())
+
+  return Number.isFinite(start) && current >= start
+}
+
 // Today's date split into the two pieces the headers display
 export function formatToday(date = new Date()) {
   return {

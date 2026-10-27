@@ -20,16 +20,6 @@ export function writeStored(key, value) {
   }
 }
 
-export function removeStored(key) {
-  try {
-    localStorage.removeItem(key)
-    return true
-  } catch {
-    // storage unavailable; there's nothing to clear
-    return false
-  }
-}
-
 // Same wrappers for sessionStorage: the values survive a reload but are wiped
 // when the tab/browser is closed, so a fresh visit always starts clean.
 export function readSession(key, fallback = null) {

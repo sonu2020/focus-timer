@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { readStored, removeStored, writeStored } from './storage'
+import { readStored, writeStored } from './storage'
 
 // Where this visitor's team identity is saved in their browser
 const IDENTITY_STORAGE_KEY = 'focus-timer.identity'
@@ -26,9 +26,13 @@ export function writeTeamCache(teamId, patch) {
   writeStored(teamCacheKey(teamId), { ...current, ...patch })
 }
 
-// A short, random team id used when someone taps "New"
+// A new, unique team id for each sprint
 export function generateTeamId() {
-  return `team-${Math.random().toString(36).slice(2, 8)}`
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `team-${crypto.randomUUID()}`
+  }
+
+  return `team-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 // Returns the saved identity, or null for a solo visitor
@@ -40,17 +44,12 @@ export function readIdentity() {
   }
 
   return {
-    email: typeof saved.email === 'string' ? saved.email.trim() : '',
     teamId: saved.teamId.trim(),
   }
 }
 
 export function saveIdentity(identity) {
   writeStored(IDENTITY_STORAGE_KEY, identity)
-}
-
-export function clearIdentity() {
-  removeStored(IDENTITY_STORAGE_KEY)
 }
 
 // Tracks which team room this browsing session is actively using. The team id
@@ -81,11 +80,6 @@ export function markTeamActive(teamId) {
   }
 }
 
-// The shareable link that drops a teammate straight into this team
-export function getInviteLink(teamId) {
-  return `${window.location.origin}/?team=${encodeURIComponent(teamId)}`
-}
-
 // Reads the team id out of a "?team=..." invite link, or an empty string
 export function readInviteTeam() {
   try {
@@ -104,9 +98,9 @@ function teamSocketUrl(teamId) {
   )}/ws`
 }
 
-// Keeps a live connection to a team's room and mirrors the shared tasks,
-// sprint settings, and member list. In solo mode (no teamId) it stays idle.
-export function useTeamRoom({ teamId, email, enabled }) {
+// Keeps a live connection to a team's room and mirrors the shared tasks and
+// sprint settings. In solo mode (no teamId) it stays idle.
+export function useTeamRoom({ teamId, enabled }) {
   const [todos, setTodosState] = useState(() => {
     const cached = readTeamCache(teamId)
     return Array.isArray(cached?.todos) ? cached.todos : []
@@ -114,7 +108,6 @@ export function useTeamRoom({ teamId, email, enabled }) {
   const [config, setConfigState] = useState(
     () => readTeamCache(teamId)?.config ?? null,
   )
-  const [members, setMembers] = useState([])
   const [status, setStatus] = useState('idle')
   // True once the room's state has arrived, so callers can tell "empty" apart
   // from "not loaded yet"
@@ -122,17 +115,12 @@ export function useTeamRoom({ teamId, email, enabled }) {
 
   const socketRef = useRef(null)
   const todosRef = useRef(todos)
-  const emailRef = useRef(email)
   const [prevTeamId, setPrevTeamId] = useState(teamId)
 
   // Keep the ref in step with state so handlers never read a stale list
   useEffect(() => {
     todosRef.current = todos
   }, [todos])
-
-  useEffect(() => {
-    emailRef.current = email
-  }, [email])
 
   // When the room changes, restore that room's cached state before the socket
   // connects. Adjusting state during render is React's recommended way to reset
@@ -166,7 +154,6 @@ export function useTeamRoom({ teamId, email, enabled }) {
       socket.onopen = () => {
         attempts = 0
         setStatus('online')
-        socket.send(JSON.stringify({ type: 'join', email: emailRef.current }))
       }
 
       socket.onmessage = (event) => {
@@ -188,9 +175,6 @@ export function useTeamRoom({ teamId, email, enabled }) {
         todosRef.current = nextTodos
         setTodosState(nextTodos)
         setConfigState(nextConfig)
-        setMembers(
-          Array.isArray(message.state.members) ? message.state.members : [],
-        )
         setHasState(true)
 
         writeTeamCache(teamId, { todos: nextTodos, config: nextConfig })
@@ -255,7 +239,6 @@ export function useTeamRoom({ teamId, email, enabled }) {
     hasState,
     todos,
     config,
-    members,
     setTodos,
     setConfig,
   }
