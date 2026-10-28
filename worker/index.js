@@ -43,7 +43,7 @@ export class TeamRoom extends DurableObject {
     return new Response(null, { status: 101, webSocket: client })
   }
 
-  async webSocketMessage(ws, message) {
+  async webSocketMessage(_ws, message) {
     if (typeof message !== 'string') return
 
     let payload
@@ -54,14 +54,6 @@ export class TeamRoom extends DurableObject {
     }
 
     if (!payload || typeof payload.type !== 'string') return
-
-    if (payload.type === 'join') {
-      ws.serializeAttachment({
-        email: typeof payload.email === 'string' ? payload.email : '',
-      })
-      this.broadcast()
-      return
-    }
 
     if (payload.type === 'setTodos' && Array.isArray(payload.todos)) {
       await this.persist({ todos: payload.todos })
@@ -75,28 +67,12 @@ export class TeamRoom extends DurableObject {
     }
   }
 
-  async webSocketClose() {
-    this.broadcast()
-  }
-
-  async webSocketError() {
-    this.broadcast()
-  }
-
   // The shared snapshot sent to every connected client
   publicState() {
     return {
       todos: this.room.todos,
       config: this.room.config,
-      members: this.members(),
     }
-  }
-
-  members() {
-    return this.ctx
-      .getWebSockets()
-      .map((socket) => socket.deserializeAttachment()?.email ?? '')
-      .filter(Boolean)
   }
 
   async persist(patch) {

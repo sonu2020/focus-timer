@@ -1,34 +1,9 @@
-export const AMBIENCE_TRACKS = [
-  { id: "off", label: "Off", hint: "silence" },
-  { id: "rain", label: "Rain", hint: "steady rainfall" },
-  { id: "waves", label: "Ocean", hint: "slow swells" },
-  { id: "forest", label: "Forest", hint: "wind & birds" },
-  { id: "brown", label: "Brown noise", hint: "deep rumble" },
-  { id: "pink", label: "Pink noise", hint: "soft static" },
-  { id: "focus", label: "Focus pad", hint: "calm chords" },
-  // remove if unwanted
-  {
-    id: "drone",
-    label: "Meditation drone",
-    hint: "deep drone",
-    file: "/audio/rooted-meditation-drone-cccaefcf.mp3",
-    fallback: "focus",
-  },
-  // remove if unwanted
-  {
-    id: "techno",
-    label: "Ambient techno",
-    hint: "soft pulse",
-    file: "/audio/pulsing-ambient-techno-dfd07da3.mp3",
-    fallback: "focus",
-  },
-];
+const MASTER_VOLUME = 0.6;
 
 let ctx = null;
 let master = null;
 let current = null;
 let currentId = "off";
-let volume = 0.6;
 const listeners = new Set();
 
 export function getAmbienceId() {
@@ -55,7 +30,7 @@ function getContext() {
     if (!AudioCtx) return null;
     ctx = new AudioCtx();
     master = ctx.createGain();
-    master.gain.value = volume;
+    master.gain.value = MASTER_VOLUME;
     master.connect(ctx.destination);
   }
   if (ctx.state === "suspended") ctx.resume();
@@ -479,7 +454,10 @@ function stopCurrent() {
   }, 450);
 }
 
-export function playAmbience(id, options = {}) {
+export function playAmbience(
+  id: string,
+  options: { file?: string; fallback?: string } = {},
+) {
   if (id !== "off" && id === currentId) return;
 
   stopCurrent();
@@ -490,9 +468,8 @@ export function playAmbience(id, options = {}) {
   }
 
   const audio = getContext();
-  const track = AMBIENCE_TRACKS.find((item) => item.id === id);
-  const file = options.file ?? track?.file;
-  const fallback = options.fallback ?? track?.fallback ?? id;
+  const file = options.file;
+  const fallback = options.fallback ?? id;
   const build = file ? fileTrack(file, fallback) : BUILDERS[fallback];
 
   if (!audio || !build) {
@@ -507,9 +484,4 @@ export function playAmbience(id, options = {}) {
 
   current = { out, cleanup: build(audio, out) };
   setCurrentId(id);
-}
-
-export function setAmbienceVolume(value) {
-  volume = Math.min(1, Math.max(0, value));
-  if (master) master.gain.setTargetAtTime(volume, ctx.currentTime, 0.05);
 }

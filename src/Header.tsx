@@ -1,6 +1,5 @@
 import { formatToday } from "./time";
 import "./Header.css";
-// import AmbienceMenu from './AmbienceMenu'
 
 type TeamStatus = "online" | "connecting" | "offline";
 
@@ -80,8 +79,6 @@ function Header({
           <button type="button" className="app-header__start" onClick={onStart}>
             Update Sprint
           </button>
-
-          {/* <AmbienceMenu /> */}
         </div>
       </div>
     </header>

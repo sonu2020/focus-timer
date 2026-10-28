@@ -28,16 +28,6 @@ function formatTime(seconds) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-// duration can be seconds (number) or "mm:ss" (string) in cafes.js
-function toSeconds(duration) {
-  if (typeof duration === 'number') return duration
-  if (typeof duration === 'string' && duration.includes(':')) {
-    const [m, s] = duration.split(':').map(Number)
-    return m * 60 + (s || 0)
-  }
-  return DEFAULT_TOTAL
-}
-
 function CafePicker() {
   const [open, setOpen] = useState(false)
   const [cafeId, setCafeId] = useState(readSavedCafe)
@@ -49,7 +39,7 @@ function CafePicker() {
   const index = Math.max(0, CAFES.findIndex((item) => item.id === cafeId))
   const cafe = CAFES[index]
   const isPlaying = playingId === cafe.id
-  const total = toSeconds(cafe.duration)
+  const total = DEFAULT_TOTAL
   const progress = Math.min(100, (elapsed / total) * 100)
 
   // Keep the card positioned right above the pill
@@ -232,21 +222,9 @@ function CafePicker() {
                     </svg>
                   ) : (
                     <span className="cafe-player__item-time">
-                      {formatTime(toSeconds(item.duration))}
+                      {formatTime(DEFAULT_TOTAL)}
                     </span>
                   )}
-                </button>
-
-                <button
-                  type="button"
-                  className="cafe-player__more"
-                  aria-label={`More options for ${item.name}`}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="4" r="2.2" fill="currentColor" />
-                    <circle cx="12" cy="12" r="2.2" fill="currentColor" />
-                    <circle cx="12" cy="20" r="2.2" fill="currentColor" />
-                  </svg>
                 </button>
               </li>
             )

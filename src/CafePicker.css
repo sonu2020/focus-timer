@@ -256,24 +256,6 @@
   height: calc(26 * var(--u));
 }
 
-.cafe-player__more {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: calc(28 * var(--u));
-  height: calc(36 * var(--u));
-  margin-left: calc(14 * var(--u));
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--black);
-}
-
-.cafe-player__more svg {
-  width: calc(20 * var(--u));
-  height: calc(24 * var(--u));
-}
-
 /* ---------- Small screens ---------- */
 @media (max-width: 480px) {
   .cafe-player,
