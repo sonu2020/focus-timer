@@ -132,7 +132,14 @@ function CafePicker() {
           </svg>
         </button>
 
-        <div className="cafe-player__bar">
+        <div
+          className="cafe-player__bar"
+          role="progressbar"
+          aria-label="Cafe sound playback"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={elapsed}
+        >
           <div className="cafe-player__bar-fill" style={{ width: `${progress}%` }} />
           <div className="cafe-player__bar-dot" style={{ left: `${progress}%` }} />
         </div>

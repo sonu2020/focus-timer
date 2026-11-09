@@ -318,7 +318,11 @@ function SprintModal({
 
         <div className="sprint-modal__field">
           <span className="sprint-modal__label">How long is the sprint?</span>
-          <div className="sprint-modal__segments" role="group">
+          <div
+            className="sprint-modal__segments"
+            role="group"
+            aria-label="Sprint length"
+          >
             {BLOCK_PRESETS.map((option) => (
               <button
                 key={option}
@@ -360,7 +364,11 @@ function SprintModal({
 
         <div className="sprint-modal__field">
           <span className="sprint-modal__label">Choose your sprint theme</span>
-          <div className="sprint-modal__swatches" role="group">
+          <div
+            className="sprint-modal__swatches"
+            role="group"
+            aria-label="Sprint theme"
+          >
             {THEMES.map((item) => (
               <button
                 key={item.name}

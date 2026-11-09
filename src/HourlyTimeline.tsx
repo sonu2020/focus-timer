@@ -331,7 +331,7 @@ function HourlyTimeline({
           ))}
         </div>
 
-        <div className="hourly-timeline__status">
+        <footer className="hourly-timeline__status">
           <CafePicker />
 
           <span
@@ -342,7 +342,7 @@ function HourlyTimeline({
             {/* CHANGED: no more "Done" text, it stays at 00:00 when finished */}
             {formatRemaining(remainingMinutes)}
           </span>
-        </div>
+        </footer>
       </section>
 
       {todos.length > 0 && (

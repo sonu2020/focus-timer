@@ -47,7 +47,11 @@ function Header({
           </span>
         )}
 
-        <div className="app-header__actions">
+        <div
+          className="app-header__actions"
+          role="group"
+          aria-label="Sprint actions"
+        >
           <button
             type="button"
             className="app-header__todo"

@@ -5,7 +5,7 @@ function HomePage({ onStart }) {
   const { day, monthYear } = formatToday()
 
   return (
-    <section className="home">
+    <main className="home">
       <header className="home__header">
         <div className="home__header-inner">
           <div className="home__date">
@@ -52,7 +52,7 @@ function HomePage({ onStart }) {
           </button>
         </div>
       </div>
-    </section>
+    </main>
   )
 }
 

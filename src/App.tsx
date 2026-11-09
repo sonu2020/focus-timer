@@ -542,14 +542,20 @@ function App() {
             className={`content${viewMode === 'timeline' ? ' content--timeline' : ''}`}
           >
             {viewMode === 'timer' ? (
-              <div className="view" key="timer">
-                <section className="timer-card">
-                  <div className="tabs" aria-label="Timer mode">
+              <section
+                className="view"
+                key="timer"
+                aria-label="Pomodoro timer"
+              >
+                <div className="timer-card">
+                  <div className="tabs" role="group" aria-label="Timer mode">
                     {Object.entries(labels).map(([key, label]) => (
                       <button
                         key={key}
+                        type="button"
                         className={mode === key ? 'tab active' : 'tab'}
                         onClick={() => selectMode(key)}
+                        aria-pressed={mode === key}
                       >
                         {label}
                       </button>
@@ -585,15 +591,23 @@ function App() {
                   </div>
 
                   <div className="controls">
-                    <button className="start-button" onClick={toggleTimer}>
+                    <button
+                      type="button"
+                      className="start-button"
+                      onClick={toggleTimer}
+                    >
                       {isRunning ? 'PAUSE' : 'START'}
                     </button>
 
-                    <button className="reset-button" onClick={resetTimer}>
+                    <button
+                      type="button"
+                      className="reset-button"
+                      onClick={resetTimer}
+                    >
                       Reset
                     </button>
                   </div>
-                </section>
+                </div>
 
                 <p className="session-count">
                   Completed focus sessions: {completed}
@@ -604,7 +618,7 @@ function App() {
                     ? 'Time to focus!'
                     : 'Take a break—you earned it.'}
                 </p>
-              </div>
+              </section>
             ) : (
               <div className="view timeline-view" key="timeline">
                 <HourlyTimeline

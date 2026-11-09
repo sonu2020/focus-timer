@@ -104,7 +104,11 @@ function SprintCompleteModal({ onDone, onExtend, config }) {
 
         {extending && (
           <div className="sprint-complete__extend">
-            <div className="sprint-complete__presets" role="group">
+            <div
+              className="sprint-complete__presets"
+              role="group"
+              aria-label="Extend by"
+            >
               {PRESETS.map((preset) => (
                 <button
                   key={preset.label}
