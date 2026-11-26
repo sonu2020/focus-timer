@@ -3,7 +3,7 @@
 import { spawn } from 'node:child_process'
 
 const children = [
-  spawn('wrangler', ['dev', '--port', '8787'], { stdio: 'inherit' }),
+  spawn('wrangler', ['dev', '--port', '8787', '--ip', '0.0.0.0'], { stdio: 'inherit' }),
   spawn('vite', ['--host'], { stdio: 'inherit' }),
 ]
 

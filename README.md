@@ -1,13 +1,8 @@
 # Focus Timer
 
-Focus Timer is a browser-based productivity app built around clock-anchored focus
-sprints. It combines a visual hourly timeline, scheduled tasks, ambient cafe
-soundscapes, and optional real-time collaboration for small groups.
+Focus Timer is a browser-based productivity app built around clock-anchored focus sprints. It combines a visual hourly timeline, scheduled tasks, ambient cafe soundscapes, and optional real-time collaboration for small groups.
 
-There is no account system. A visitor can open the app, choose the start and end
-of their working day, pick how many focus blocks to divide it into, and begin
-immediately. Collaboration only activates when a user explicitly invites someone
-to a shared room.
+There is no account system. A visitor can open the app, choose the start and end of their working day, pick how many focus blocks to divide it into, and begin immediately. Collaboration only activates when a user explicitly invites someone to a shared room.
 
 ## Table of contents
 
@@ -16,6 +11,13 @@ to a shared room.
 - [Tech stack](#tech-stack)
 - [Architecture](#architecture)
 - [Getting started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Install](#install)
+  - [Run locally](#run-locally)
+  - [Run with Docker](#run-with-docker)
+  - [Build](#build)
+  - [Deploy](#deploy)
+  - [Lint](#lint)
 - [Available scripts](#available-scripts)
 - [Project structure](#project-structure)
 - [How it works](#how-it-works)
@@ -28,16 +30,10 @@ to a shared room.
 
 Focus Timer is designed around two ideas:
 
-1. **Focused work should start with minimal friction.** The home screen leads
-   directly into sprint setup, and the working view is tied to the real clock
-   rather than a separate stopwatch.
-2. **Lightweight collaboration should be available when needed.** A solo sprint
-   can become a shared room through a link, with tasks and sprint settings
-   synchronized live while the app remains fully usable offline.
+1. **Focused work should start with minimal friction.** The home screen leads directly into sprint setup, and the working view is tied to the real clock rather than a separate stopwatch.
+2. **Lightweight collaboration should be available when needed.** A solo sprint can become a shared room through a link, with tasks and sprint settings synchronized live while the app remains fully usable offline.
 
-The application is client-first. Solo state is stored in the browser; the
-Cloudflare backend is used only for shared team rooms and for serving the
-production build.
+The application is client-first. Solo state is stored in the browser; the Cloudflare backend is used only for shared team rooms and for serving the production build.
 
 ## Features
 
@@ -46,27 +42,19 @@ production build.
 - Create or update a sprint from a single dialog.
 - Choose a start time, end time, block count, and color theme.
 - Block presets of 3, 5, and 10, plus a custom count from 1 to 12.
-- Eight theme colors: green, orange, red, purple, dark gray, blue, yellow, and
-  pink.
-- The sprint is anchored to the selected clock window, not to the moment the
-  user clicks Start.
-- The timeline calculation supports windows that cross midnight, although the
-  sprint dialog currently requires the end time to be after the start time.
+- Eight theme colors: green, orange, red, purple, dark gray, blue, yellow, and pink.
+- The sprint is anchored to the selected clock window, not to the moment the user clicks Start.
+- The timeline calculation supports windows that cross midnight, although the sprint dialog currently requires the end time to be after the start time.
 
 ### Hourly timeline
 
-- A horizontal timeline spans the selected day and marks every whole hour in the
-  window.
-- The sprint is divided into focus blocks that drain from the top down as time
-  passes.
+- A horizontal timeline spans the selected day and marks every whole hour in the window.
+- The sprint is divided into focus blocks that drain from the top down as time passes.
 - A live "now" marker tracks the current time and toggles the task panel.
-- A countdown appears during the final five minutes of the active block and turns
-  critical in the final two and a half minutes.
+- A countdown appears during the final five minutes of the active block and turns critical in the final two and a half minutes.
 - Remaining sprint time is always visible.
-- The timeline refreshes with `requestAnimationFrame` and immediately on tab
-  visibility changes.
-- At the end of the sprint, a completion dialog offers to wrap up or extend the
-  sprint by 15 minutes, 30 minutes, one hour, or a custom end time.
+- The timeline refreshes with `requestAnimationFrame` and immediately on tab visibility changes.
+- At the end of the sprint, a completion dialog offers to wrap up or extend the sprint by 15 minutes, 30 minutes, one hour, or a custom end time.
 
 ### Tasks
 
@@ -79,32 +67,22 @@ production build.
 
 ### Team collaboration
 
-- The sprint dialog always offers a share link. Copying or focusing it creates
-  a shared room with a generated room ID. Each new sprint gets a fresh room ID;
-  updating an existing sprint keeps its room.
+- The sprint dialog always offers a share link. Copying or focusing it creates a shared room with a generated room ID. Each new sprint gets a fresh room ID; updating an existing sprint keeps its room.
 - Clients connect over WebSocket to `/api/teams/:teamId/ws`.
 - The room shares the task list and sprint configuration.
-- Changes are persisted in the Durable Object's storage and broadcast to every
-  connected client.
-- The client reconnects automatically with exponential backoff, capped at 10
-  seconds.
-- Room state is cached in the browser so a refresh can restore the shared view
-  before the socket reconnects.
+- Changes are persisted in the Durable Object's storage and broadcast to every connected client.
+- The client reconnects automatically with exponential backoff, capped at 10 seconds.
+- Room state is cached in the browser so a refresh can restore the shared view before the socket reconnects.
 - A Live / Connecting / Offline indicator shows synchronization state.
-- The backend uses Cloudflare's WebSocket Hibernation API so idle rooms do not
-  need to remain continuously active.
+- The backend uses Cloudflare's WebSocket Hibernation API so idle rooms do not need to remain continuously active.
 
 ### Shareable links
 
-- Sprint settings are packed into a URL-safe Base64 `?sprint=...` parameter, so
-  a recipient can recreate the sprint without a backend lookup.
-- When a team room is active, the link also includes `?team=...` so the
-  recipient joins the shared room.
-- Shared links open directly into the timeline view once the sprint's start
-  time has arrived. Before then the app stays on the home screen.
+- Sprint settings are packed into a URL-safe Base64 `?sprint=...` parameter, so a recipient can recreate the sprint without a backend lookup.
+- When a team room is active, the link also includes `?team=...` so the recipient joins the shared room.
+- Shared links open directly into the timeline view once the sprint's start time has arrived. Before then the app stays on the home screen.
 - Share parameters are removed from the address bar after they are handled.
-- A manual clipboard fallback is provided for browsers that block the async
-  Clipboard API.
+- A manual clipboard fallback is provided for browsers that block the async Clipboard API.
 
 ### Cafe ambience
 
@@ -114,28 +92,21 @@ production build.
   - Matteo Coffea, Koramangala — gentle bossa nova
   - Hole in the Wall Cafe, Koramangala — sunlit bossa
   - Starbucks, Koramangala — Parisian waltz
-- If a track cannot play, the app generates a fallback with the Web Audio API,
-  including rain, waves, forest, brown noise, pink noise, a focus pad, and
-  layered cafe atmospheres.
-- Playback controls include play/pause, previous/next selection, elapsed and
-  total time, and a progress bar.
+- If a track cannot play, the app generates a fallback with the Web Audio API, including rain, waves, forest, brown noise, pink noise, a focus pad, and layered cafe atmospheres.
+- Playback controls include play/pause, previous/next selection, elapsed and total time, and a progress bar.
 - The selected cafe is remembered locally.
 
 ### Notifications and alerts
 
 - A synthesized two-note chime plays when a focus block ends.
-- Audio is unlocked on the first user interaction so the chime can play later
-  without a gesture.
-- Browser notification permission is requested when a sprint is created, and a
-  notification is shown when permission has been granted.
+- Audio is unlocked on the first user interaction so the chime can play later without a gesture.
+- Browser notification permission is requested when a sprint is created, and a notification is shown when permission has been granted.
 
 ### Personalization
 
-- Light and dark themes, initialized from the operating system preference and
-  persisted locally.
+- Light and dark themes, initialized from the operating system preference and persisted locally.
 - The theme toggle is available inside the sprint dialog.
-- Sprint settings, tasks, and the active view persist for the browsing session,
-  so a reload restores the current work while a fresh visit starts clean.
+- Sprint settings, tasks, and the active view persist for the browsing session, so a reload restores the current work while a fresh visit starts clean.
 - Theme, selected cafe, and team identity persist in `localStorage`.
 
 ## Tech stack
@@ -198,6 +169,7 @@ Cloudflare Worker                  │
 
 - [Bun](https://bun.sh/) for dependency installation and scripts.
 - Node.js 20 or newer for the Vite and Wrangler toolchain.
+- Docker Engine, if you intend to use Docker.
 - A Cloudflare account only if you intend to deploy the Worker.
 
 ### Install
@@ -219,8 +191,7 @@ This starts two processes:
 - Vite on its default port, usually `http://localhost:5173`.
 - Wrangler's local Worker runtime on port `8787`.
 
-Vite proxies `/api` and WebSocket traffic to the local Worker, so collaboration
-works in development.
+Vite proxies `/api` and WebSocket traffic to the local Worker, so collaboration works in development.
 
 You can also run the processes separately:
 
@@ -228,6 +199,112 @@ You can also run the processes separately:
 bun run dev:client
 bun run dev:api
 ```
+
+### Run with Docker
+
+Docker allows you to run the Vite frontend and the local Wrangler Worker runtime inside a container.
+
+#### Build the Docker image
+
+From the project root, run:
+
+```bash
+sudo docker build -t focus-timer .
+```
+
+This builds an image named `focus-timer` using the project's Dockerfile.
+
+#### Create and start the container
+
+```bash
+sudo docker run -d \
+  --name focus-timer-dev \
+  -p 5173:5173 \
+  -p 8787:8787 \
+  -v "$(pwd)":/app \
+  -v focus-timer-node_modules:/app/node_modules \
+  focus-timer
+```
+
+This configuration:
+
+- Maps host port `5173` to the Vite development server.
+- Maps host port `8787` to the local Wrangler Worker runtime.
+- Mounts the project directory into `/app`, so source changes are reflected inside the container.
+- Uses a named Docker volume called `focus-timer-node_modules` to store dependencies separately from the project directory.
+
+#### Access the application
+
+Open the application in your browser:
+
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- Worker runtime: `http://localhost:8787`
+
+Vite proxies `/api` and WebSocket traffic to the Worker on port `8787`.
+
+#### Container management
+
+Check running containers:
+
+```bash
+sudo docker ps
+```
+
+View the latest container logs:
+
+```bash
+sudo docker logs --tail 50 focus-timer-dev
+```
+
+Follow logs continuously:
+
+```bash
+sudo docker logs -f focus-timer-dev
+```
+
+Stop the container:
+
+```bash
+sudo docker stop focus-timer-dev
+```
+
+Start the existing container again:
+
+```bash
+sudo docker start focus-timer-dev
+```
+
+Remove the container:
+
+```bash
+sudo docker rm -f focus-timer-dev
+```
+
+Removing the container does not remove the named `focus-timer-node_modules` volume. The volume remains available until it is explicitly removed.
+
+#### Execute commands inside the container
+
+To open a shell inside the running container:
+
+```bash
+sudo docker exec -it focus-timer-dev sh
+```
+
+To install updated dependencies inside the container:
+
+```bash
+sudo docker exec -it focus-timer-dev bun install --frozen-lockfile
+```
+
+#### Rebuild after Dockerfile changes
+
+If the Dockerfile or its build instructions change, rebuild the image:
+
+```bash
+sudo docker build -t focus-timer .
+```
+
+To use the newly built image, stop and remove the old container, then create a new one using the `docker run` command above.
 
 ### Build
 
@@ -251,8 +328,7 @@ Then deploy:
 bun run deploy
 ```
 
-The deploy script builds the frontend and publishes the Worker, assets, and
-Durable Object migration defined in `wrangler.jsonc`.
+The deploy script builds the frontend and publishes the Worker, assets, and Durable Object migration defined in `wrangler.jsonc`.
 
 ### Lint
 
@@ -319,61 +395,44 @@ focus-timer/
 The app has two active views:
 
 - **Home** — the landing screen with the sprint call to action.
-- **Timeline** — the working view with the clock-driven timeline, tasks, cafe
-  picker, and sprint completion flow.
+- **Timeline** — the working view with the clock-driven timeline, tasks, cafe picker, and sprint completion flow.
 
-`App.tsx` owns the application state, including sprint configuration, tasks,
-identity, team mode, view mode, and the Pomodoro timer logic. The view is
-restored from `sessionStorage` on reload and is set to `timeline` when a shared
-sprint link is opened.
+`App.tsx` owns the application state, including sprint configuration, tasks, identity, team mode, view mode, and the Pomodoro timer logic. The view is restored from `sessionStorage` on reload and is set to `timeline` when a shared sprint link is opened.
 
-The Pomodoro timer interface and cadence are implemented in `App.tsx`, but the
-current view flow never selects the timer view.
+The Pomodoro timer interface and cadence are implemented in `App.tsx`, but the current view flow never selects the timer view.
 
 ### Timeline behavior
 
-The timeline derives everything from the current clock time and the selected
-sprint window:
+The timeline derives everything from the current clock time and the selected sprint window:
 
 - Elapsed time is measured from the chosen start time.
 - The sprint span is divided evenly into the selected number of blocks.
-- Each block's fill is clipped from the top according to how much of that block
-  has elapsed.
+- Each block's fill is clipped from the top according to how much of that block has elapsed.
 - Hour ticks are generated for every whole hour inside the window.
 - The countdown and block-end notification are driven by the active block.
 
 ### Collaboration flow
 
 1. The user creates or updates a sprint in the sprint dialog.
-2. When the user copies or focuses the share link, the app uses the sprint's own
-   team ID (fresh for a new sprint, reused when updating), stores the identity,
-   caches the current tasks and configuration, and builds a link containing both
-   `sprint` and `team` parameters.
-3. The recipient opens the link. The app decodes the sprint, activates the team,
-   and connects to the room.
+2. When the user copies or focuses the share link, the app uses the sprint's own team ID (fresh for a new sprint, reused when updating), stores the identity, caches the current tasks and configuration, and builds a link containing both `sprint` and `team` parameters.
+3. The recipient opens the link. The app decodes the sprint, activates the team, and connects to the room.
 4. The Durable Object sends the authoritative room state.
-5. Task and sprint changes are applied optimistically on the client and sent to
-   the room.
-6. The room persists the change and broadcasts the new snapshot to all connected
-   clients.
-7. If the socket drops, the client shows the offline state and retries with
-   exponential backoff while cached state keeps the interface usable.
+5. Task and sprint changes are applied optimistically on the client and sent to the room.
+6. The room persists the change and broadcasts the new snapshot to all connected clients.
+7. If the socket drops, the client shows the offline state and retries with exponential backoff while cached state keeps the interface usable.
 
 ### Backend
 
-The Worker entry point routes WebSocket upgrade requests at
-`/api/teams/:teamId/ws` to the Durable Object named by that team ID. Static
-assets are served by Cloudflare Workers Assets with single-page-application
-fallback, and `/api/*` requests are routed to the Worker first.
+The Worker entry point routes WebSocket upgrade requests at `/api/teams/:teamId/ws` to the Durable Object named by that team ID. Static assets are served by Cloudflare Workers Assets with single-page-application fallback, and `/api/*` requests are routed to the Worker first.
 
 Each `TeamRoom` Durable Object:
 
-- loads persisted state during construction with `blockConcurrencyWhile`,
-- accepts WebSocket connections using `ctx.acceptWebSocket`,
-- sends the current snapshot when a client connects,
-- handles `setTodos` and `setConfig` messages,
-- persists changes under the `room` storage key,
-- broadcasts the public state to every connected socket.
+- Loads persisted state during construction with `blockConcurrencyWhile`.
+- Accepts WebSocket connections using `ctx.acceptWebSocket`.
+- Sends the current snapshot when a client connects.
+- Handles `setTodos` and `setConfig` messages.
+- Persists changes under the `room` storage key.
+- Broadcasts the public state to every connected socket.
 
 The shared snapshot contains tasks and sprint configuration.
 
@@ -392,15 +451,13 @@ The shared snapshot contains tasks and sprint configuration.
 | Shared sprint | URL `?sprint=` parameter | Per link |
 | Team tasks and configuration | Durable Object storage (`room`) | Shared room lifetime |
 
-All browser storage access is wrapped in fail-safe helpers, so disabled or full
-storage does not crash the app.
+All browser storage access is wrapped in fail-safe helpers, so disabled or full storage does not crash the app.
 
 ## Accessibility
 
 - Semantic landmarks and ARIA roles are used throughout the interface.
 - The sprint dialog and cafe menu can be closed with `Escape`.
-- Buttons have descriptive labels, and interactive controls expose expanded and
-  pressed states where appropriate.
+- Buttons have descriptive labels, and interactive controls expose expanded and pressed states where appropriate.
 - Status messages use live regions, and timers expose `role="timer"`.
 - Reduced-motion media queries are included in the stylesheet.
 - Layouts adapt to tablet and mobile widths.
@@ -408,25 +465,14 @@ storage does not crash the app.
 
 ## Current limitations
 
-- **The classic timer view is not reachable.** The Pomodoro timer logic and
-  circular timer interface exist in `App.tsx`, but the current view flow only
-  selects Home or Timeline.
-- **Timer state is local.** Team rooms synchronize tasks and sprint
-  configuration only; timer mode, timer progress, and audio playback stay in
-  each browser.
-- **No accounts or authentication.** Anyone with a room ID can join, so the
-  collaboration model is intended for trusted small groups.
-- **Connection status only.** The backend does not track member identities; the
-  UI shows only whether the room connection is live.
-- **Solo state is session-scoped.** Clearing site data removes local identity,
-  cached rooms, and preferences. Solo sprint data is intentionally limited to
-  the tab session.
+- **The classic timer view is not reachable.** The Pomodoro timer logic and circular timer interface exist in `App.tsx`, but the current view flow only selects Home or Timeline.
+- **Timer state is local.** Team rooms synchronize tasks and sprint configuration only; timer mode, timer progress, and audio playback stay in each browser.
+- **No accounts or authentication.** Anyone with a room ID can join, so the collaboration model is intended for trusted small groups.
+- **Connection status only.** The backend does not track member identities; the UI shows only whether the room connection is live.
+- **Solo state is session-scoped.** Clearing site data removes local identity, cached rooms, and preferences. Solo sprint data is intentionally limited to the tab session.
 - **No automated tests.** Oxlint is the only static check configured.
-- **Project metadata is stale.** `index.html` still uses the title
-  `my-first-react-app`, and `package.json` is still version `0.0.0`.
+- **Project metadata is stale.** `index.html` still uses the title `my-first-react-app`, and `package.json` is still version `0.0.0`.
 
 ## Audio assets
 
-The bundled cafe tracks in `public/audio/` should have their usage rights
-confirmed before public distribution. The app can generate fallback ambience
-with the Web Audio API if a file is unavailable or cannot be played.
+The bundled cafe tracks in `public/audio/` should have their usage rights confirmed before public distribution. The app can generate fallback ambience with the Web Audio API if a file is unavailable or cannot be played.
